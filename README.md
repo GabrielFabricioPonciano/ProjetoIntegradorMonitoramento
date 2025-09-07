@@ -1,57 +1,52 @@
 # 🌡️ Sistema de Monitoramento Ambiental
 
-Sistema Django completo para monitoramento de temperatura e umidade com dashboard interativo, APIs REST e detecção inteligente de violações de limites operacionais.
+> **Dashboard dinâmico e profissional para monitoramento de temperatura e umidade em tempo real**
 
-## 📋 Visão Geral
+[![Django](https://img.shields.io/badge/Django-4.2-green.svg)](https://djangoproject.com)
+[![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://python.org)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com)
+[![Chart.js](https://img.shields.io/badge/Chart.js-4.4-orange.svg)](https://chartjs.org)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Sistema moderno de monitoramento ambiental desenvolvido com Django, oferecendo:
-- **Dashboard Web Interativo** com visualizações em tempo real
-- **APIs REST** para integração e consulta de dados
-- **Importação Excel** com suporte a cabeçalhos em português
-- **Detecção Automática** de violações baseadas em limites da Embrapa
-- **Interface Responsiva** com design limpo e localização brasileira
+## 🎯 Sobre o Projeto
 
-### 🎯 Funcionalidades Principais
+O **Sistema de Monitoramento Ambiental** é uma aplicação web desenvolvida em Django que oferece um dashboard interativo e dinâmico para visualização de dados de temperatura e umidade. O sistema é ideal para monitoramento de ambientes controlados, laboratórios, estufas, ou qualquer local que requeira controle rigoroso das condições ambientais.
 
-- ✅ Dashboard responsivo com gráficos Chart.js e formatação brasileira
-- ✅ KPIs visuais com ícones coloridos e métricas em tempo real
-- ✅ Gráficos de série temporal com linhas de limite tracejadas
-- ✅ Tabela de violações com filtros e paginação
-- ✅ APIs REST documentadas com Swagger/OpenAPI
-- ✅ Importação inteligente de dados Excel
-- ✅ Timezone América/São_Paulo e formatação pt-BR
-- ✅ Design mobile-first com Bootstrap 5.3
+### 🎨 **Principais Características:**
 
----
+- **Dashboard Dinâmico**: Interface moderna que atualiza automaticamente a cada **60 segundos**
+- **Visualização Inteligente**: Gráficos adaptativos com formatação brasileira
+- **Filtros Avançados**: Seleção de períodos (1, 30, 60, 90 dias) e intervalos personalizados
+- **Detecção de Violações**: Monitoramento automático de limites e alertas
+- **Design Responsivo**: Interface otimizada para desktop, tablet e mobile
+- **Acessibilidade**: Compatível com WCAG AA para inclusão digital
+- **Sistema 100% Dinâmico**: Sem botões de refresh - tudo é atualizado automaticamente
 
-## 🖥️ Dashboard Web
+## ✨ Funcionalidades
 
-### 🎨 Interface Principal
+### 📊 **Dashboard Principal**
+- **KPIs em Tempo Real**: Médias, mínimos e máximos de temperatura e umidade
+- **Gráficos Interativos**: Visualização temporal com Chart.js e formatação brasileira
+- **Limites Visuais**: Linhas de referência para limites mínimos e máximos
+- **Auto-Refresh**: Atualização automática dos dados a cada **60 segundos**
 
-Acesse o dashboard em: **http://localhost:8000/**
+### 🎛️ **Controles Dinâmicos**
+- **Seletor de Período**: Botões para 1, 30, 60, 90 dias com atualização instantânea
+- **Período Personalizado**: Seleção de datas específicas com validação
+- **Interface Sem Botões**: Sistema 100% dinâmico, sem necessidade de refresh manual
+- **Filtros Inteligentes**: Aplicação automática de períodos nos gráficos e KPIs
 
-O dashboard apresenta:
+### � **Monitoramento de Violações**
+- **Detecção Automática**: Identificação de valores fora dos limites estabelecidos
+- **Tabela Detalhada**: Histórico das últimas 20 violações com timestamps
+- **Badges Coloridos**: Categorização visual por tipo de violação
+- **Estatísticas**: Percentual de violações sobre o total de medições
 
-#### 📊 KPIs Principais
-- **Temperatura Média** com ícone termômetro (vermelho)
-- **Umidade Média** com ícone gota d'água (azul)  
-- **Total de Violações** com ícone alerta (amarelo)
-- **Total de Medições** com ícone banco de dados (verde)
-
-#### 📈 Visualizações
-- **Gráfico de Temperatura**: Linha temporal com limites 17-19,5°C tracejados
-- **Gráfico de Umidade**: Linha temporal com limite 62% tracejado
-- **Datas Reais**: Eixo X no formato brasileiro dd/MM HH:mm
-- **Tooltips Interativos**: Formatação brasileira com vírgulas decimais
-
-#### 📋 Tabela de Violações
-- Últimas violações ordenadas por data
-- Colunas: Data/Hora, Temperatura, Umidade, Motivo
-- Badges coloridos para diferentes tipos de violação
-- Botão de atualização em tempo real
-
-#### 🎯 Banner Informativo
-Condições ideais segundo Embrapa: **17–19,5°C e UR < 62%**
+### 📱 **Design Responsivo**
+- **Mobile-First**: Interface otimizada para dispositivos móveis
+- **Breakpoints Inteligentes**: Layout adaptativo para diferentes tamanhos de tela
+- **Touch-Friendly**: Botões e controles otimizados para touch
+- **Performance**: Carregamento rápido com skeleton screens
 
 ---
 

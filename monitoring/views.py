@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes, OpenApiExample
 from django.shortcuts import render
+from django.utils import timezone
+from datetime import timedelta
 
 from django.db.models import Avg, Min, Max
 from .models import Measurement
@@ -11,10 +13,62 @@ def dashboard(request):
     """View para renderizar o dashboard web"""
     return render(request, 'dashboard.html')
 
+def get_filtered_queryset(request):
+    """Aplica filtros de período baseado nos parâmetros da requisição"""
+    qs = Measurement.objects.all()
+    
+    # Filtro por número de dias
+    days = request.GET.get('days')
+    if days:
+        try:
+            days = int(days)
+            if days > 0:
+                end_date = timezone.now()
+                start_date = end_date - timedelta(days=days)
+                qs = qs.filter(ts__gte=start_date, ts__lte=end_date)
+        except (ValueError, TypeError):
+            pass
+    
+    # Filtro por período personalizado
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    if start_date and end_date:
+        try:
+            from datetime import datetime
+            start_dt = datetime.fromisoformat(start_date).replace(hour=0, minute=0, second=0)
+            end_dt = datetime.fromisoformat(end_date).replace(hour=23, minute=59, second=59)
+            
+            # Converter para timezone aware se necessário
+            if timezone.is_naive(start_dt):
+                start_dt = timezone.make_aware(start_dt)
+            if timezone.is_naive(end_dt):
+                end_dt = timezone.make_aware(end_dt)
+                
+            qs = qs.filter(ts__gte=start_dt, ts__lte=end_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    return qs
+
 @extend_schema(
     tags=["Resumo"],
     summary="Resumo geral de temperatura/umidade e violações",
-    description="Calcula agregados (média/mín/máx) e contagens/percentuais de violações. Percentuais são calculados sobre o total de linhas (MVP).",
+    description="Calcula agregados (média/mín/máx) e contagens/percentuais de violações. Suporta filtros de período.",
+    parameters=[
+        OpenApiParameter(
+            name="days", type=OpenApiTypes.INT, required=False, location=OpenApiParameter.QUERY,
+            description="Filtrar últimos N dias (exemplo: 30 para último mês)"
+        ),
+        OpenApiParameter(
+            name="start_date", type=OpenApiTypes.DATE, required=False, location=OpenApiParameter.QUERY,
+            description="Data inicial (formato: YYYY-MM-DD)"
+        ),
+        OpenApiParameter(
+            name="end_date", type=OpenApiTypes.DATE, required=False, location=OpenApiParameter.QUERY,
+            description="Data final (formato: YYYY-MM-DD)"
+        ),
+    ],
     responses={
         200: OpenApiTypes.OBJECT,
     },
@@ -22,25 +76,21 @@ def dashboard(request):
         OpenApiExample(
             "Exemplo de resposta",
             value={
-                "total": 730,
-                "temperature": {
-                    "mean": 12.8, "min": 9.7, "max": 18.5,
-                    "ideal_range": [10.0, 15.0],
-                    "violations_count": 123, "violations_pct": 16.8
+                "temperature_stats": {
+                    "mean": 18.45, "min": 16.2, "max": 20.9
                 },
-                "humidity": {
-                    "mean": 58.2, "min": 41.0, "max": 68.0,
-                    "ideal_limit": 60.0,
-                    "violations_count": 87, "violations_pct": 11.9
+                "humidity_stats": {
+                    "mean": 59.26, "min": 54.0, "max": 65.0
                 },
-                "violations_total": 150, "violations_pct": 20.5
+                "total_measurements": 730,
+                "violations_count": 15
             },
         )
     ],
 )
 @api_view(["GET"])
 def api_summary(request):
-    qs = Measurement.objects.all()
+    qs = get_filtered_queryset(request)
     total = qs.count()
     
     # Agregados básicos
@@ -73,39 +123,46 @@ def api_summary(request):
     parameters=[
         OpenApiParameter(
             name="max_points", type=OpenApiTypes.INT, required=False, location=OpenApiParameter.QUERY,
-            description="Quantidade máxima de pontos retornados (mín: 5, máx: 2000, padrão: 2000)."
+            description="Quantidade máxima de pontos retornados (mín: 5, máx: 2000, padrão: 1000)."
+        ),
+        OpenApiParameter(
+            name="days", type=OpenApiTypes.INT, required=False, location=OpenApiParameter.QUERY,
+            description="Filtrar últimos N dias (exemplo: 30 para último mês)"
+        ),
+        OpenApiParameter(
+            name="start_date", type=OpenApiTypes.DATE, required=False, location=OpenApiParameter.QUERY,
+            description="Data inicial (formato: YYYY-MM-DD)"
+        ),
+        OpenApiParameter(
+            name="end_date", type=OpenApiTypes.DATE, required=False, location=OpenApiParameter.QUERY,
+            description="Data final (formato: YYYY-MM-DD)"
         ),
     ],
     responses={200: OpenApiTypes.OBJECT},
     examples=[
         OpenApiExample(
             "Exemplo de resposta",
-            value={
-                "points": [
-                    {"ts": "2025-01-01T07:30:00-03:00", "temp": 12.4, "rh": 58.0},
-                    {"ts": "2025-01-01T16:30:00-03:00", "temp": 11.8, "rh": 57.0},
-                ],
-                "max_points": 2000
-            }
+            value=[
+                {"timestamp": "2025-01-01T07:30:00-03:00", "temperature": 18.4, "relative_humidity": 59.0},
+                {"timestamp": "2025-01-01T16:30:00-03:00", "temperature": 18.2, "relative_humidity": 58.5},
+            ]
         )
     ],
 )
 @api_view(["GET"])
 def api_series(request):
-    max_points = int(request.GET.get("max_points", 2000))
+    max_points = int(request.GET.get("max_points", 1000))
     if max_points > 2000:
         max_points = 2000
     if max_points < 5:
         max_points = 5
 
-    # Busca os ÚLTIMOS N pontos (mais recentes) e depois inverte para ordem cronológica
-    qs = (Measurement.objects
-          .order_by("-ts")  # Mais recentes primeiro
-          .values("ts", "temp_current", "rh_current")[:max_points])
+    # Usar queryset filtrado
+    qs = get_filtered_queryset(request)
     
-    # Converte para lista e inverte para ordem cronológica
-    records = list(qs)
-    records.reverse()
+    # Busca os dados ordenados cronologicamente
+    records = (qs.order_by("ts")  # Ordem cronológica
+              .values("ts", "temp_current", "rh_current")[:max_points])
 
     points = []
     for r in records:
@@ -129,36 +186,49 @@ def api_series(request):
     parameters=[
         OpenApiParameter(
             name="limit", type=OpenApiTypes.INT, required=False, location=OpenApiParameter.QUERY,
-            description="Quantidade de registros (default 50)."
+            description="Quantidade de registros (default 20)."
+        ),
+        OpenApiParameter(
+            name="days", type=OpenApiTypes.INT, required=False, location=OpenApiParameter.QUERY,
+            description="Filtrar últimos N dias (exemplo: 30 para último mês)"
+        ),
+        OpenApiParameter(
+            name="start_date", type=OpenApiTypes.DATE, required=False, location=OpenApiParameter.QUERY,
+            description="Data inicial (formato: YYYY-MM-DD)"
+        ),
+        OpenApiParameter(
+            name="end_date", type=OpenApiTypes.DATE, required=False, location=OpenApiParameter.QUERY,
+            description="Data final (formato: YYYY-MM-DD)"
         ),
     ],
     responses={200: OpenApiTypes.OBJECT},
     examples=[
         OpenApiExample(
             "Exemplo de resposta",
-            value={
-                "items": [
-                    {
-                        "ts": "2025-03-02T16:30:00-03:00",
-                        "temp_current": 18.2,
-                        "rh_current": 61.0,
-                        "reason": "Temperatura 18,2°C fora do intervalo 10,0°C - 15,0°C, Umidade relativa 61,0% acima do limite 60,0%"
-                    }
-                ]
-            }
+            value=[
+                {
+                    "timestamp": "2025-12-28T07:30:00-03:00",
+                    "temperature": 19.7,
+                    "relative_humidity": 61.0,
+                    "reason": "Temperatura 19,7°C fora do intervalo 17,0°C - 19,5°C"
+                }
+            ]
         )
     ],
 )
 @api_view(["GET"])
 def api_violations(request):
-    limit = int(request.GET.get("limit", 50))
-    qs = (Measurement.objects
-          .filter(violation_q())
-          .order_by("-ts")
-          .values("ts", "temp_current", "rh_current")[:limit])
+    limit = int(request.GET.get("limit", 20))
+    
+    # Usar queryset filtrado
+    qs = get_filtered_queryset(request)
+    
+    records = (qs.filter(violation_q())
+              .order_by("-ts")
+              .values("ts", "temp_current", "rh_current")[:limit])
 
     items = []
-    for r in qs:
+    for r in records:
         # Converte timezone para America/Sao_Paulo se necessário
         ts = r["ts"]
         if ts.tzinfo:

@@ -1,17 +1,20 @@
-// Dashboard JavaScript - Design Limpo e Corrigido
+// Dashboard JavaScript - Sistema Dinâmico de Monitoramento
 class EnvironmentalDashboard {
     constructor() {
         this.charts = {};
         this.data = {};
         this.isLoading = false;
+        this.currentPeriod = 30; // dias
+        this.lastUpdated = null;
+        this.autoRefreshEnabled = true;
+        this.autoRefreshInterval = null;
         
-        // Formatador brasileiro para números
+        // Formatadores brasileiros
         this.numberFormatter = new Intl.NumberFormat('pt-BR', {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1
         });
         
-        // Formatador para datas brasileiras
         this.dateFormatter = new Intl.DateTimeFormat('pt-BR', {
             day: '2-digit',
             month: '2-digit',
@@ -20,7 +23,6 @@ class EnvironmentalDashboard {
             timeZone: 'America/Sao_Paulo'
         });
         
-        // Formatador completo para datas
         this.fullDateFormatter = new Intl.DateTimeFormat('pt-BR', {
             day: '2-digit',
             month: '2-digit',
@@ -30,115 +32,151 @@ class EnvironmentalDashboard {
             timeZone: 'America/Sao_Paulo'
         });
         
-        // Configurações dos gráficos
-        this.chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20
-                    }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    titleColor: '#333',
-                    bodyColor: '#666',
-                    borderColor: '#ddd',
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    displayColors: true,
-                    callbacks: {
-                        title: (context) => {
-                            if (context[0] && context[0].parsed && context[0].parsed.x) {
-                                const date = new Date(context[0].parsed.x);
-                                return this.fullDateFormatter.format(date);
-                            }
-                            return '';
-                        },
-                        label: (context) => {
-                            const value = context.parsed.y;
-                            const label = context.dataset.label;
-                            if (label.includes('Temperatura')) {
-                                return `${label}: ${this.numberFormatter.format(value)}°C`;
-                            } else if (label.includes('Umidade')) {
-                                return `${label}: ${this.numberFormatter.format(value)}%`;
-                            }
-                            return `${label}: ${this.numberFormatter.format(value)}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    title: {
-                        display: true,
-                        font: {
-                            weight: 'bold'
-                        }
-                    },
-                    grid: {
-                        color: '#f0f0f0'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString('pt-BR', {
-                                minimumFractionDigits: 1,
-                                maximumFractionDigits: 1
-                            });
-                        }
-                    }
-                }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-            }
-        };
+        this.monthFormatter = new Intl.DateTimeFormat('pt-BR', {
+            month: 'short',
+            timeZone: 'America/Sao_Paulo'
+        });
+        
+        this.timeFormatter = new Intl.DateTimeFormat('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'America/Sao_Paulo'
+        });
         
         this.init();
     }
     
     async init() {
+        this.setupEventListeners();
         this.showLoading();
+        this.showSkeletons();
         
         try {
             await this.loadData();
             this.updateKPIs();
             this.createCharts();
             await this.loadViolations();
+            this.hideSkeletons();
             this.addAnimations();
+            this.updateLastUpdatedTime();
+            this.startAutoRefresh();
         } catch (error) {
             console.error('Erro ao inicializar dashboard:', error);
-            this.showError('Erro ao carregar dados do dashboard');
+            this.showErrorToast('Erro ao carregar dados do dashboard');
         } finally {
             this.hideLoading();
         }
     }
     
+    setupEventListeners() {
+        // Seletor de período
+        const periodRadios = document.querySelectorAll('input[name="period"]');
+        periodRadios.forEach(radio => {
+            radio.addEventListener('change', async (e) => {
+                if (e.target.value === 'custom') {
+                    this.showCustomPeriodPanel();
+                } else {
+                    this.hideCustomPeriodPanel();
+                    this.currentPeriod = parseInt(e.target.value);
+                    await this.refreshData();
+                }
+            });
+        });
+        
+        // Teclas de atalho
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                this.refreshData();
+            }
+        });
+    }
+    
+    showCustomPeriodPanel() {
+        const panel = document.getElementById('custom-period-panel');
+        panel.style.display = 'block';
+        panel.classList.add('fade-in');
+        
+        // Definir datas padrão (último mês)
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        
+        document.getElementById('start-date').value = startDate.toISOString().split('T')[0];
+        document.getElementById('end-date').value = endDate.toISOString().split('T')[0];
+    }
+    
+    hideCustomPeriodPanel() {
+        const panel = document.getElementById('custom-period-panel');
+        panel.style.display = 'none';
+    }
+    
+    async applyCustomPeriod() {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        
+        if (!startDate || !endDate) {
+            this.showErrorToast('Por favor, selecione ambas as datas');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            this.showErrorToast('Data inicial deve ser anterior à data final');
+            return;
+        }
+        
+        this.customStartDate = startDate;
+        this.customEndDate = endDate;
+        this.currentPeriod = 'custom';
+        
+        await this.refreshData();
+        this.hideCustomPeriodPanel();
+        
+        const periodText = this.getCurrentPeriodText();
+        this.showSuccessToast(`Período personalizado aplicado: ${periodText}`);
+    }
+    
+    buildApiUrl(endpoint, extraParams = {}) {
+        const params = new URLSearchParams();
+        
+        // Adicionar filtros de período
+        if (this.currentPeriod === 'custom' && this.customStartDate && this.customEndDate) {
+            params.set('start_date', this.customStartDate);
+            params.set('end_date', this.customEndDate);
+        } else if (this.currentPeriod !== 'all') {
+            params.set('days', this.currentPeriod.toString());
+        }
+        
+        // Adicionar parâmetros extras
+        Object.entries(extraParams).forEach(([key, value]) => {
+            params.set(key, value);
+        });
+        
+        return `${endpoint}?${params.toString()}`;
+    }
+    
     async loadData() {
         try {
+            // URLs com filtros aplicados
+            const summaryUrl = this.buildApiUrl('/api/summary');
+            const seriesUrl = this.buildApiUrl('/api/series', { max_points: '1000' });
+            
+            console.log('Carregando dados:', { summaryUrl, seriesUrl });
+            
             // Carregar dados de resumo
-            const summaryResponse = await fetch('/api/summary');
+            const summaryResponse = await fetch(summaryUrl);
             if (!summaryResponse.ok) throw new Error('Erro ao carregar resumo');
             this.data.summary = await summaryResponse.json();
             
             // Carregar dados de série temporal
-            const seriesResponse = await fetch('/api/series?max_points=500');
+            const seriesResponse = await fetch(seriesUrl);
             if (!seriesResponse.ok) throw new Error('Erro ao carregar série');
             this.data.series = await seriesResponse.json();
             
-            // Ordenar série por timestamp (do mais antigo ao mais recente)
-            if (Array.isArray(this.data.series)) {
-                this.data.series.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-            }
+            console.log('Dados carregados:', {
+                summary: this.data.summary,
+                seriesCount: this.data.series?.length
+            });
             
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
@@ -159,20 +197,24 @@ class EnvironmentalDashboard {
         const tempMin = summary.temperature_stats.min;
         const tempMax = summary.temperature_stats.max;
         
-        document.getElementById('temp-mean').textContent = `${this.numberFormatter.format(tempMean)}°C`;
-        document.getElementById('temp-range').textContent = 
-            `Min: ${this.numberFormatter.format(tempMin)}°C | Max: ${this.numberFormatter.format(tempMax)}°C`;
+        if (tempMean !== null) {
+            document.getElementById('temp-mean').textContent = `${this.numberFormatter.format(tempMean)}°C`;
+            document.getElementById('temp-range').textContent = 
+                `Min: ${this.numberFormatter.format(tempMin)}°C | Max: ${this.numberFormatter.format(tempMax)}°C`;
+        }
         
         // Umidade
         const rhMean = summary.humidity_stats.mean;
         const rhMin = summary.humidity_stats.min;
         const rhMax = summary.humidity_stats.max;
         
-        document.getElementById('rh-mean').textContent = `${this.numberFormatter.format(rhMean)}%`;
-        document.getElementById('rh-range').textContent = 
-            `Min: ${this.numberFormatter.format(rhMin)}% | Max: ${this.numberFormatter.format(rhMax)}%`;
+        if (rhMean !== null) {
+            document.getElementById('rh-mean').textContent = `${this.numberFormatter.format(rhMean)}%`;
+            document.getElementById('rh-range').textContent = 
+                `Min: ${this.numberFormatter.format(rhMin)}% | Max: ${this.numberFormatter.format(rhMax)}%`;
+        }
         
-        // Violações
+        // Violações com base de cálculo
         const violationsCount = summary.violations_count || 0;
         const totalMeasurements = summary.total_measurements || 0;
         const violationsPct = totalMeasurements > 0 ? (violationsCount / totalMeasurements * 100) : 0;
@@ -180,6 +222,8 @@ class EnvironmentalDashboard {
         document.getElementById('violations-count').textContent = violationsCount.toLocaleString('pt-BR');
         document.getElementById('violations-pct').textContent = 
             `${this.numberFormatter.format(violationsPct)}% do total`;
+        document.getElementById('violations-base').textContent = 
+            `(base: ${totalMeasurements.toLocaleString('pt-BR')} medições válidas)`;
         
         // Total de medições
         document.getElementById('total-measurements').textContent = totalMeasurements.toLocaleString('pt-BR');
@@ -193,27 +237,35 @@ class EnvironmentalDashboard {
         
         this.createTemperatureChart();
         this.createHumidityChart();
+        
+        // Mostrar containers dos gráficos
+        document.getElementById('temp-chart-placeholder').style.display = 'none';
+        document.getElementById('temp-chart-container').style.display = 'block';
+        document.getElementById('rh-chart-placeholder').style.display = 'none';
+        document.getElementById('rh-chart-container').style.display = 'block';
     }
     
     createTemperatureChart() {
         const ctx = document.getElementById('tempChart').getContext('2d');
         
-        // Preparar dados com timestamps reais
+        // Destruir gráfico anterior se existir
+        if (this.charts.temperature) {
+            this.charts.temperature.destroy();
+        }
+        
+        // Preparar dados
         const data = this.data.series.map(item => ({
             x: new Date(item.timestamp),
             y: item.temperature
         }));
         
-        // Criar linhas de limite com timestamps
-        const tempLowLine = this.data.series.map(item => ({
-            x: new Date(item.timestamp),
-            y: 17.0
-        }));
+        // Determinar formato do eixo X baseado no período
+        const timeSpan = this.getTimeSpan(data);
+        const displayFormats = this.getTimeDisplayFormats(timeSpan);
         
-        const tempHighLine = this.data.series.map(item => ({
-            x: new Date(item.timestamp),
-            y: 19.5
-        }));
+        // Linhas de limite
+        const tempLowLine = data.map(item => ({ x: item.x, y: 17.0 }));
+        const tempHighLine = data.map(item => ({ x: item.x, y: 19.5 }));
         
         this.charts.temperature = new Chart(ctx, {
             type: 'line',
@@ -228,15 +280,15 @@ class EnvironmentalDashboard {
                         fill: false,
                         tension: 0.1,
                         pointRadius: 1,
-                        pointHoverRadius: 5
+                        pointHoverRadius: 6
                     },
                     {
                         label: 'Limite Mínimo (17,0°C)',
                         data: tempLowLine,
-                        borderColor: '#0d6efd',
+                        borderColor: 'rgba(13, 110, 253, 0.6)',
                         backgroundColor: 'transparent',
                         borderWidth: 1,
-                        borderDash: [5, 5],
+                        borderDash: [6, 4],
                         fill: false,
                         pointRadius: 0,
                         pointHoverRadius: 0
@@ -244,10 +296,10 @@ class EnvironmentalDashboard {
                     {
                         label: 'Limite Máximo (19,5°C)',
                         data: tempHighLine,
-                        borderColor: '#dc3545',
+                        borderColor: 'rgba(220, 53, 69, 0.6)',
                         backgroundColor: 'transparent',
                         borderWidth: 1,
-                        borderDash: [5, 5],
+                        borderDash: [6, 4],
                         fill: false,
                         pointRadius: 0,
                         pointHoverRadius: 0
@@ -255,44 +307,79 @@ class EnvironmentalDashboard {
                 ]
             },
             options: {
-                ...this.chartOptions,
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                decimation: {
+                    enabled: data.length > 500,
+                    algorithm: 'lttb',
+                    samples: 500
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#333',
+                        bodyColor: '#666',
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            title: (context) => {
+                                if (context[0] && context[0].parsed && context[0].parsed.x) {
+                                    const date = new Date(context[0].parsed.x);
+                                    return this.fullDateFormatter.format(date);
+                                }
+                                return '';
+                            },
+                            label: (context) => {
+                                const value = context.parsed.y;
+                                const label = context.dataset.label;
+                                if (label.includes('Temperatura') || label.includes('Limite')) {
+                                    return `${label}: ${this.numberFormatter.format(value)}°C`;
+                                }
+                                return `${label}: ${this.numberFormatter.format(value)}`;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: {
                         type: 'time',
                         time: {
-                            displayFormats: {
-                                hour: 'dd/MM HH:mm',
-                                day: 'dd/MM HH:mm'
-                            }
+                            displayFormats: displayFormats,
+                            tooltipFormat: 'dd/MM/yyyy HH:mm'
                         },
                         title: {
                             display: true,
                             text: 'Data/Hora',
-                            font: {
-                                weight: 'bold'
-                            }
+                            font: { weight: 'bold' }
                         },
-                        ticks: {
-                            source: 'auto',
-                            maxTicksLimit: 10
-                        }
+                        grid: { color: '#f0f0f0' }
                     },
                     y: {
-                        ...this.chartOptions.scales.y,
                         title: {
                             display: true,
-                            text: 'Temperatura (°C)',
-                            font: {
-                                weight: 'bold'
-                            }
+                            text: '°C',
+                            font: { weight: 'bold' }
                         },
+                        grid: { color: '#f0f0f0' },
                         ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 1,
-                                    maximumFractionDigits: 1
-                                }) + '°C';
-                            }
+                            callback: (value) => this.numberFormatter.format(value) + '°C'
                         }
                     }
                 }
@@ -303,17 +390,23 @@ class EnvironmentalDashboard {
     createHumidityChart() {
         const ctx = document.getElementById('rhChart').getContext('2d');
         
-        // Preparar dados com timestamps reais
+        // Destruir gráfico anterior se existir
+        if (this.charts.humidity) {
+            this.charts.humidity.destroy();
+        }
+        
+        // Preparar dados
         const data = this.data.series.map(item => ({
             x: new Date(item.timestamp),
             y: item.relative_humidity
         }));
         
-        // Criar linha de limite com timestamps
-        const rhLimitLine = this.data.series.map(item => ({
-            x: new Date(item.timestamp),
-            y: 62.0
-        }));
+        // Determinar formato do eixo X baseado no período
+        const timeSpan = this.getTimeSpan(data);
+        const displayFormats = this.getTimeDisplayFormats(timeSpan);
+        
+        // Linha de limite
+        const rhLimitLine = data.map(item => ({ x: item.x, y: 62.0 }));
         
         this.charts.humidity = new Chart(ctx, {
             type: 'line',
@@ -328,15 +421,15 @@ class EnvironmentalDashboard {
                         fill: false,
                         tension: 0.1,
                         pointRadius: 1,
-                        pointHoverRadius: 5
+                        pointHoverRadius: 6
                     },
                     {
                         label: 'Limite Máximo (62,0%)',
                         data: rhLimitLine,
-                        borderColor: '#ffc107',
+                        borderColor: 'rgba(255, 193, 7, 0.6)',
                         backgroundColor: 'transparent',
                         borderWidth: 1,
-                        borderDash: [5, 5],
+                        borderDash: [6, 4],
                         fill: false,
                         pointRadius: 0,
                         pointHoverRadius: 0
@@ -344,44 +437,79 @@ class EnvironmentalDashboard {
                 ]
             },
             options: {
-                ...this.chartOptions,
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                decimation: {
+                    enabled: data.length > 500,
+                    algorithm: 'lttb',
+                    samples: 500
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#333',
+                        bodyColor: '#666',
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            title: (context) => {
+                                if (context[0] && context[0].parsed && context[0].parsed.x) {
+                                    const date = new Date(context[0].parsed.x);
+                                    return this.fullDateFormatter.format(date);
+                                }
+                                return '';
+                            },
+                            label: (context) => {
+                                const value = context.parsed.y;
+                                const label = context.dataset.label;
+                                if (label.includes('Umidade') || label.includes('Limite')) {
+                                    return `${label}: ${this.numberFormatter.format(value)}%`;
+                                }
+                                return `${label}: ${this.numberFormatter.format(value)}`;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: {
                         type: 'time',
                         time: {
-                            displayFormats: {
-                                hour: 'dd/MM HH:mm',
-                                day: 'dd/MM HH:mm'
-                            }
+                            displayFormats: displayFormats,
+                            tooltipFormat: 'dd/MM/yyyy HH:mm'
                         },
                         title: {
                             display: true,
                             text: 'Data/Hora',
-                            font: {
-                                weight: 'bold'
-                            }
+                            font: { weight: 'bold' }
                         },
-                        ticks: {
-                            source: 'auto',
-                            maxTicksLimit: 10
-                        }
+                        grid: { color: '#f0f0f0' }
                     },
                     y: {
-                        ...this.chartOptions.scales.y,
                         title: {
                             display: true,
-                            text: 'Umidade Relativa (%)',
-                            font: {
-                                weight: 'bold'
-                            }
+                            text: '%',
+                            font: { weight: 'bold' }
                         },
+                        grid: { color: '#f0f0f0' },
                         ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 1,
-                                    maximumFractionDigits: 1
-                                }) + '%';
-                            }
+                            callback: (value) => this.numberFormatter.format(value) + '%'
                         }
                     }
                 }
@@ -389,9 +517,40 @@ class EnvironmentalDashboard {
         });
     }
     
+    getTimeSpan(data) {
+        if (!data || data.length === 0) return 0;
+        const start = new Date(data[0].x);
+        const end = new Date(data[data.length - 1].x);
+        return (end - start) / (1000 * 60 * 60 * 24); // dias
+    }
+    
+    getTimeDisplayFormats(timeSpanDays) {
+        if (timeSpanDays >= 90) {
+            return {
+                day: 'MMM',
+                week: 'MMM',
+                month: 'MMM yyyy'
+            };
+        } else if (timeSpanDays >= 30) {
+            return {
+                day: 'dd/MM',
+                week: 'dd/MM',
+                month: 'MM/yyyy'
+            };
+        } else {
+            return {
+                hour: 'dd/MM HH:mm',
+                day: 'dd/MM HH:mm'
+            };
+        }
+    }
+    
     async loadViolations() {
         try {
-            const response = await fetch('/api/violations?limit=50');
+            const violationsUrl = this.buildApiUrl('/api/violations', { limit: '20' });
+            console.log('Carregando violações:', violationsUrl);
+            
+            const response = await fetch(violationsUrl);
             if (!response.ok) throw new Error('Erro ao carregar violações');
             
             const violations = await response.json();
@@ -457,30 +616,104 @@ class EnvironmentalDashboard {
     
     showNoViolations() {
         const tableBody = document.getElementById('violations-table');
+        const periodText = this.getCurrentPeriodText();
         tableBody.innerHTML = `
             <tr>
-                <td colspan="4" class="text-center py-4 text-muted">
-                    <i class="fas fa-check-circle text-success me-2"></i>
-                    Nenhuma violação encontrada nos dados atuais.
+                <td colspan="4" class="text-center py-4 text-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Nenhuma violação encontrada no período: <strong>${periodText}</strong>
                 </td>
             </tr>
         `;
+    }
+    
+    getCurrentPeriodText() {
+        if (this.currentPeriod === 'custom' && this.customStartDate && this.customEndDate) {
+            const startDate = new Date(this.customStartDate);
+            const endDate = new Date(this.customEndDate);
+            const startFormatted = startDate.toLocaleDateString('pt-BR');
+            const endFormatted = endDate.toLocaleDateString('pt-BR');
+            return `${startFormatted} até ${endFormatted}`;
+        } else if (this.currentPeriod === 1) {
+            return 'último dia';
+        } else if (this.currentPeriod === 30) {
+            return 'últimos 30 dias';
+        } else if (this.currentPeriod === 60) {
+            return 'últimos 60 dias';
+        } else if (this.currentPeriod === 90) {
+            return 'últimos 90 dias';
+        } else {
+            return 'período selecionado';
+        }
     }
     
     showViolationsError() {
         const tableBody = document.getElementById('violations-table');
+        const periodText = this.getCurrentPeriodText();
         tableBody.innerHTML = `
             <tr>
                 <td colspan="4" class="text-center py-4 text-danger">
                     <i class="fas fa-exclamation-circle me-2"></i>
-                    Erro ao carregar violações. Tente novamente.
+                    Erro ao carregar violações para o período: <strong>${periodText}</strong>. Tente novamente.
                 </td>
             </tr>
         `;
     }
     
+    async refreshData() {
+        if (this.isLoading) return;
+        
+        this.isLoading = true;
+        
+        try {
+            // Mostrar skeletons enquanto carrega
+            this.showSkeletons();
+            
+            await this.loadData();
+            this.updateKPIs();
+            this.createCharts(); // Gráficos são recriados aqui
+            await this.loadViolations();
+            this.updateLastUpdatedTime();
+            
+            // Esconder skeletons
+            this.hideSkeletons();
+            
+            const periodText = this.getCurrentPeriodText();
+            console.log(`Dados atualizados para período: ${periodText}`);
+        } catch (error) {
+            console.error('Erro ao atualizar dados:', error);
+            this.showErrorToast('Erro ao atualizar dados');
+        } finally {
+            this.isLoading = false;
+        }
+    }
+    
+    showSkeletons() {
+        const skeletons = ['temp', 'humidity', 'violations', 'measurements'];
+        skeletons.forEach(id => {
+            const skeleton = document.getElementById(`${id}-skeleton`);
+            const content = document.getElementById(`${id}-content`);
+            if (skeleton && content) {
+                skeleton.style.display = 'block';
+                content.style.display = 'none';
+            }
+        });
+    }
+    
+    hideSkeletons() {
+        const skeletons = ['temp', 'humidity', 'violations', 'measurements'];
+        skeletons.forEach(id => {
+            const skeleton = document.getElementById(`${id}-skeleton`);
+            const content = document.getElementById(`${id}-content`);
+            if (skeleton && content) {
+                skeleton.style.display = 'none';
+                content.style.display = 'block';
+                content.classList.add('fade-in');
+            }
+        });
+    }
+    
     addAnimations() {
-        // Adicionar animações aos cards
         const cards = document.querySelectorAll('.kpi-card, .card');
         cards.forEach((card, index) => {
             card.classList.add('fade-in-up');
@@ -488,12 +721,39 @@ class EnvironmentalDashboard {
         });
     }
     
+    updateLastUpdatedTime() {
+        this.lastUpdated = new Date();
+        const timeString = this.timeFormatter.format(this.lastUpdated);
+        const dateString = this.dateFormatter.format(this.lastUpdated);
+        
+        document.getElementById('last-updated').innerHTML = `
+            <i class="fas fa-clock me-1"></i>
+            Atualizado às ${timeString} (${dateString})
+        `;
+    }
+    
+    startAutoRefresh() {
+        // Auto-refresh a cada 1 minuto
+        this.autoRefreshInterval = setInterval(() => {
+            if (this.autoRefreshEnabled && !this.isLoading) {
+                console.log('Auto-refresh ativado');
+                this.refreshData();
+            }
+        }, 60000); // 1 minuto
+    }
+    
+    stopAutoRefresh() {
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
+            this.autoRefreshInterval = null;
+        }
+    }
+    
     showLoading() {
         const overlay = document.getElementById('loading-overlay');
         if (overlay) {
             overlay.classList.remove('hidden');
         }
-        this.isLoading = true;
     }
     
     hideLoading() {
@@ -501,39 +761,28 @@ class EnvironmentalDashboard {
         if (overlay) {
             overlay.classList.add('hidden');
         }
-        this.isLoading = false;
     }
     
-    showError(message) {
-        console.error(message);
-        // Aqui você pode adicionar uma notificação visual se desejar
-    }
-    
-    // Método para atualizar dados periodicamente (opcional)
-    startAutoRefresh(interval = 300000) { // 5 minutos
-        setInterval(async () => {
-            if (!this.isLoading) {
-                console.log('Atualizando dados automaticamente...');
-                try {
-                    await this.loadData();
-                    this.updateKPIs();
-                    this.updateCharts();
-                    await this.loadViolations();
-                } catch (error) {
-                    console.error('Erro na atualização automática:', error);
-                }
-            }
-        }, interval);
-    }
-    
-    updateCharts() {
-        if (this.charts.temperature) {
-            this.charts.temperature.destroy();
+    showErrorToast(message) {
+        const toast = document.getElementById('error-toast');
+        const messageEl = document.getElementById('error-message');
+        
+        if (toast && messageEl) {
+            messageEl.textContent = message;
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
         }
-        if (this.charts.humidity) {
-            this.charts.humidity.destroy();
+    }
+    
+    showSuccessToast(message) {
+        const toast = document.getElementById('success-toast');
+        const messageEl = document.getElementById('success-message');
+        
+        if (toast && messageEl) {
+            messageEl.textContent = message;
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
         }
-        this.createCharts();
     }
 }
 
@@ -541,11 +790,10 @@ class EnvironmentalDashboard {
 document.addEventListener('DOMContentLoaded', () => {
     const dashboard = new EnvironmentalDashboard();
     
-    // Opcional: iniciar auto-refresh
-    // dashboard.startAutoRefresh();
+    // Expor métodos para o HTML
+    window.dashboard = {
+        applyCustomPeriod: () => dashboard.applyCustomPeriod()
+    };
     
-    // Expor para debug no console
-    window.dashboard = dashboard;
-    
-    console.log('Dashboard inicializado com sucesso!');
+    console.log('Dashboard dinâmico inicializado com sucesso!');
 });
