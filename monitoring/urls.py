@@ -7,4 +7,5 @@ urlpatterns = [
     path("api/summary", views.api_summary),
     path("api/series", views.api_series),
     path("api/violations", views.api_violations),
+    path("api/force-cycle", views.force_simulator_cycle, name="force_simulator_cycle"),  # Endpoint para forçar ciclo
 ]

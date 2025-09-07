@@ -90,6 +90,12 @@ class EnvironmentalDashboard {
                 this.refreshData();
             }
         });
+        
+        // Event listener para o botão de forçar ciclo
+        const forceCycleBtn = document.getElementById('force-cycle-btn');
+        if (forceCycleBtn) {
+            forceCycleBtn.addEventListener('click', () => this.forceCycle());
+        }
     }
     
     showCustomPeriodPanel() {
@@ -686,6 +692,56 @@ class EnvironmentalDashboard {
         } finally {
             this.isLoading = false;
         }
+    }
+    
+    async forceCycle() {
+        const btn = document.getElementById('force-cycle-btn');
+        if (!btn || btn.disabled) return;
+        
+        // Desabilitar botão durante execução
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Executando...';
+        
+        try {
+            const response = await fetch('/api/force-cycle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.showSuccessToast(
+                        `Ciclo executado: ${result.details.inserted_date || 'N/A'} ` +
+                        `(+${result.details.inserted_count || 0} registros)`
+                    );
+                    
+                    // Atualizar dados após 1 segundo
+                    setTimeout(() => this.refreshData(), 1000);
+                } else {
+                    this.showErrorToast(result.message || 'Erro ao executar ciclo');
+                }
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                this.showErrorToast(errorData.message || 'Erro na requisição');
+            }
+        } catch (error) {
+            console.error('Erro ao forçar ciclo:', error);
+            this.showErrorToast('Erro de conexão ao forçar ciclo');
+        } finally {
+            // Reabilitar botão
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play me-1"></i>Forçar Ciclo';
+        }
+    }
+    
+    getCSRFToken() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfToken ? csrfToken.value : '';
     }
     
     showSkeletons() {

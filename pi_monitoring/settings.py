@@ -85,3 +85,51 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
 }
+
+# ===== CONFIGURAÇÕES DO SIMULADOR DE DADOS =====
+
+# Ativar/desativar o simulador automático de dados
+# Por padrão, ativo apenas em modo DEBUG
+ENABLE_SIM_JOB = DEBUG
+
+# Intervalo entre execuções do job de simulação (em segundos)
+# Padrão: 60 segundos (1 minuto)
+SIM_JOB_INTERVAL_SECONDS = 60
+
+# Horários diários para geração de medições (formato "HH:MM")
+# Padrão: 07:30 e 16:30 (2 medições por dia)
+SIM_DAILY_TIMES = ["07:30", "16:30"]
+
+# Número de dias para manter no banco (rolling window)
+# Padrão: 365 dias (com 2 medições/dia = 730 registros máximo)
+SIM_TARGET_DAYS = 365
+
+# Configuração de logging para o simulador
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'monitoring.tasks': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'monitoring.apps': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

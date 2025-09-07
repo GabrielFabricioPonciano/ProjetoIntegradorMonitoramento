@@ -4,6 +4,9 @@
 {% block title %}Dashboard - Monitoramento Ambiental{% endblock %}
 
 {% block content %}
+<!-- CSRF Token para requisições AJAX -->
+{% csrf_token %}
+
 <!-- Loading overlay -->
 <div id="loading-overlay" class="loading-overlay">
     <div class="text-center">
@@ -52,7 +55,7 @@
             </div>
             
             <!-- Seletor de período centralizado -->
-            <div class="d-flex justify-content-center">
+            <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
                 <div class="btn-group" role="group" aria-label="Seletor de período">
                     <input type="radio" class="btn-check" name="period" id="period-1" value="1" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="period-1">1 dia</label>
@@ -69,6 +72,12 @@
                     <input type="radio" class="btn-check" name="period" id="period-custom" value="custom" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="period-custom">Personalizado</label>
                 </div>
+                
+                <!-- Botão para forçar ciclo de teste -->
+                <button type="button" class="btn btn-warning btn-sm" id="force-cycle-btn" title="Força execução manual do simulador para testes">
+                    <i class="fas fa-play me-1"></i>
+                    Forçar Ciclo
+                </button>
             </div>
         </div>
     </div>

@@ -1,5 +1,6 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes, OpenApiExample
 from django.shortcuts import render
 from django.utils import timezone
@@ -13,6 +14,100 @@ def dashboard(request):
     """View para renderizar o dashboard web"""
     return render(request, 'dashboard.html')
 
+
+@extend_schema(
+    operation_id="force_simulator_cycle",
+    summary="Força execução manual do ciclo do simulador",
+    description="Endpoint para testes - executa manualmente o job de rotação e inserção de dados do simulador",
+    responses={
+        200: {
+            "description": "Ciclo executado com sucesso",
+            "examples": {
+                "application/json": {
+                    "success": True,
+                    "message": "Ciclo forçado executado com sucesso",
+                    "details": {
+                        "inserted_date": "2026-01-02",
+                        "inserted_count": 2,
+                        "removed_count": 2,
+                        "total_records": 730
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Erro na execução do ciclo",
+            "examples": {
+                "application/json": {
+                    "success": False,
+                    "message": "Erro ao executar ciclo forçado",
+                    "error": "Descrição do erro"
+                }
+            }
+        }
+    }
+)
+@api_view(['POST'])
+def force_simulator_cycle(request):
+    """
+    Força a execução manual de um ciclo do simulador para testes.
+    
+    Este endpoint permite forçar a execução do job de simulação
+    sem aguardar o próximo ciclo agendado.
+    """
+    try:
+        from .tasks import rotate_and_append_daily_measurements
+        
+        # Obter dados antes da execução
+        total_before = Measurement.objects.count()
+        latest_before = None
+        try:
+            latest_before = timezone.localtime(Measurement.objects.latest('ts').ts).date()
+        except Measurement.DoesNotExist:
+            pass
+        
+        # Executar o ciclo
+        success = rotate_and_append_daily_measurements()
+        
+        if not success:
+            return Response({
+                'success': False,
+                'message': 'Erro ao executar ciclo forçado',
+                'error': 'Função retornou False'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Obter dados após a execução
+        total_after = Measurement.objects.count()
+        latest_after = None
+        try:
+            latest_after = timezone.localtime(Measurement.objects.latest('ts').ts).date()
+        except Measurement.DoesNotExist:
+            pass
+        
+        # Calcular diferenças
+        inserted_count = max(0, total_after - total_before)
+        inserted_date = latest_after.strftime('%Y-%m-%d') if latest_after else None
+        
+        return Response({
+            'success': True,
+            'message': 'Ciclo forçado executado com sucesso',
+            'details': {
+                'inserted_date': inserted_date,
+                'inserted_count': inserted_count,
+                'total_records_before': total_before,
+                'total_records_after': total_after,
+                'latest_date_before': latest_before.strftime('%Y-%m-%d') if latest_before else None,
+                'latest_date_after': latest_after.strftime('%Y-%m-%d') if latest_after else None
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': 'Erro ao executar ciclo forçado',
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
 def get_filtered_queryset(request):
     """Aplica filtros de período baseado nos parâmetros da requisição"""
     qs = Measurement.objects.all()
@@ -23,7 +118,13 @@ def get_filtered_queryset(request):
         try:
             days = int(days)
             if days > 0:
-                end_date = timezone.now()
+                # Usar a data do registro mais recente como referência, não timezone.now()
+                try:
+                    latest_record = Measurement.objects.latest('ts')
+                    end_date = latest_record.ts
+                except Measurement.DoesNotExist:
+                    end_date = timezone.now()
+                
                 start_date = end_date - timedelta(days=days)
                 qs = qs.filter(ts__gte=start_date, ts__lte=end_date)
         except (ValueError, TypeError):
