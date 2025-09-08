@@ -4,11 +4,15 @@ from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes, OpenApiExample
 from django.shortcuts import render
 from django.utils import timezone
+from django.core.cache import cache
 from datetime import timedelta
+from django_ratelimit.decorators import ratelimit
 
 from django.db.models import Avg, Min, Max
 from .models import Measurement
 from .domain import violation_q, violation_reason, TEMP_LOW, TEMP_HIGH, RH_LIMIT
+from .reports import ReportGenerator
+from .metrics import get_system_metrics, get_system_health
 
 def dashboard(request):
     """View para renderizar o dashboard web"""
@@ -87,6 +91,10 @@ def force_simulator_cycle(request):
         # Calcular diferenças
         inserted_count = max(0, total_after - total_before)
         inserted_date = latest_after.strftime('%Y-%m-%d') if latest_after else None
+        
+        # Limpar cache para forçar refresh dos dados
+        from django.core.cache import cache
+        cache.clear()
         
         return Response({
             'success': True,
@@ -190,7 +198,13 @@ def get_filtered_queryset(request):
     ],
 )
 @api_view(["GET"])
+@ratelimit(key='ip', rate='60/m', method='GET')  # 60 requests por minuto por IP
 def api_summary(request):
+    """
+    Retorna estatísticas agregadas de temperatura e umidade.
+    Dados sempre em tempo real - SEM CACHE.
+    """
+    # Sem cache para dados sempre atualizados
     qs = get_filtered_queryset(request)
     total = qs.count()
     
@@ -203,7 +217,7 @@ def api_summary(request):
     # Violações (contagem total)
     v_tot = qs.filter(violation_q()).count()
     
-    return Response({
+    result = {
         "temperature_stats": {
             "mean": round(agg["temp_avg"], 2) if agg["temp_avg"] else None,
             "min": round(agg["temp_min"], 1) if agg["temp_min"] else None,
@@ -216,7 +230,15 @@ def api_summary(request):
         },
         "total_measurements": total,
         "violations_count": v_tot,
-    })
+    }
+    
+    # Headers para evitar cache
+    response = Response(result)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 @extend_schema(
     tags=["Séries"],
@@ -251,13 +273,19 @@ def api_summary(request):
     ],
 )
 @api_view(["GET"])
+# @ratelimit(key='ip', rate='120/m', method='GET')  # 120 requests por minuto (mais permissivo para gráficos)
 def api_series(request):
+    """
+    Retorna série temporal de medições.
+    Dados sempre em tempo real - SEM CACHE.
+    """
     max_points = int(request.GET.get("max_points", 1000))
     if max_points > 2000:
         max_points = 2000
     if max_points < 5:
         max_points = 5
 
+    # Sem cache para dados sempre atualizados
     # Usar queryset filtrado
     qs = get_filtered_queryset(request)
     
@@ -279,7 +307,13 @@ def api_series(request):
             "relative_humidity": round(r["rh_current"] * 100, 1) if r["rh_current"] else None  # Converte para %
         })
 
-    return Response(points)
+    # Headers para evitar cache
+    response = Response(points)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 @extend_schema(
     tags=["Violações"],
@@ -318,9 +352,11 @@ def api_series(request):
     ],
 )
 @api_view(["GET"])
+# @ratelimit(key='ip', rate='60/m', method='GET', block=True)
 def api_violations(request):
     limit = int(request.GET.get("limit", 20))
     
+    # Sem cache para dados sempre atualizados
     # Usar queryset filtrado
     qs = get_filtered_queryset(request)
     
@@ -342,4 +378,102 @@ def api_violations(request):
             "relative_humidity": round(r["rh_current"] * 100, 1) if r["rh_current"] else None,  # Converte para %
             "reason": violation_reason(r),
         })
+    
+    # Headers para evitar cache
+    response = Response(items)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
+    
     return Response(items)
+
+
+@api_view(["POST"])
+def api_frontend_logs(request):
+    """Recebe logs do frontend para debug"""
+    try:
+        log_data = request.data
+        level = log_data.get('level', 'INFO')
+        context = log_data.get('context', 'Frontend')
+        message = log_data.get('message', '')
+        data = log_data.get('data', None)
+        
+        log_message = f"[FRONTEND-{level}] [{context}] {message}"
+        if data:
+            log_message += f" | Dados: {data}"
+            
+        # Usar logger apropriado baseado no nível
+        import logging
+        logger = logging.getLogger('monitoring')
+        
+        if level == 'ERROR':
+            logger.error(log_message)
+        elif level == 'WARNING':
+            logger.warning(log_message)
+        else:
+            logger.info(log_message)
+            
+        return Response({"status": "logged"})
+    except Exception as e:
+        # Não retornar erro para não quebrar o frontend
+        return Response({"status": "error"}, status=500)
+
+
+@extend_schema(
+    tags=["Sistema"],
+    summary="Métricas completas do sistema",
+    responses={200: OpenApiTypes.OBJECT},
+    description="Retorna métricas completas do sistema incluindo CPU, memória, disco, rede, banco de dados e aplicação."
+)
+@api_view(["GET"])
+# @ratelimit(key='ip', rate='10/m', method='GET', block=True)  # Limitado devido ao impacto na performance
+def api_system_metrics(request):
+    """
+    Retorna métricas completas do sistema.
+    Dados são cacheados por 30 segundos.
+    """
+    cache_key = "system_metrics_full"
+    
+    # Tentar buscar do cache
+    cached_result = cache.get(cache_key)
+    if cached_result:
+        return Response(cached_result)
+    
+    # Coletar métricas
+    metrics = get_system_metrics()
+    
+    # Cachear resultado por 30 segundos
+    cache.set(cache_key, metrics, 30)
+    
+    return Response(metrics)
+
+
+@extend_schema(
+    tags=["Sistema"],
+    summary="Status de saúde do sistema",
+    responses={200: OpenApiTypes.OBJECT},
+    description="Retorna o status de saúde do sistema com indicadores de CPU, memória, disco e serviços."
+)
+@api_view(["GET"])
+# @ratelimit(key='ip', rate='30/m', method='GET', block=True)
+def api_system_health(request):
+    """
+    Retorna status de saúde do sistema.
+    Dados são cacheados por 15 segundos.
+    """
+    cache_key = "system_health"
+    
+    # Tentar buscar do cache
+    cached_result = cache.get(cache_key)
+    if cached_result:
+        return Response(cached_result)
+    
+    # Verificar saúde do sistema
+    health = get_system_health()
+    
+    # Cachear resultado por 15 segundos
+    cache.set(cache_key, health, 15)
+    
+    return Response(health)

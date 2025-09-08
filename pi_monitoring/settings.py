@@ -58,6 +58,42 @@ DATABASES = {
     }
 }
 
+# ===== CONFIGURAÇÕES DE CACHE (REDIS) =====
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutos padrão
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+}
+
+# Configuração Redis (descomentado quando Redis estiver disponível)
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         },
+#         'KEY_PREFIX': 'pi_monitoring',
+#         'TIMEOUT': 300,  # 5 minutos padrão
+#     }
+# }
+
+# Cache de sessões (opcional - descomente se precisar)
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# SESSION_CACHE_ALIAS = 'default'
+
+# ===== CONFIGURAÇÕES DE BACKUP =====
+BACKUP_DIR = BASE_DIR / 'backups'
+
+# ===== CONFIGURAÇÕES DE RATE LIMITING =====
+RATELIMIT_ENABLE = True
+
 AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = "pt-br"
@@ -127,6 +163,11 @@ LOGGING = {
             'propagate': False,
         },
         'monitoring.apps': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'monitoring': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
