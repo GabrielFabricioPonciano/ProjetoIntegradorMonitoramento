@@ -34,10 +34,10 @@ export const CONFIG = {
 };
 
 export const API_ENDPOINTS = {
-    summary: (days) => `/api/summary?days=${days}`,
-    series: (days, maxPoints) => `/api/series?days=${days}&max_points=${maxPoints}`,
-    violations: (days, limit) => `/api/violations?days=${days}&limit=${limit}`,
-    forceCycle: '/api/force-cycle'
+    summary: (days) => `/api/summary/?days=${days}`,
+    series: (days, maxPoints) => `/api/series/?days=${days}&max_points=${maxPoints}`,
+    violations: (days, limit) => `/api/violations/?days=${days}&limit=${limit}`,
+    forceCycle: '/api/force-cycle/'
 };
 
 export const DOM_ELEMENTS = {

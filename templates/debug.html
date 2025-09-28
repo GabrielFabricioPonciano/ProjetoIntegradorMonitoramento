@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Debug Dashboard</title>
+    <script>
+        // Debug básico
+        console.log('Página carregada');
+
+        // Verificar se módulos existem
+        window.addEventListener('load', function () {
+            console.log('Window loaded');
+
+            // Verificar se Chart.js carregou
+            if (typeof Chart !== 'undefined') {
+                console.log('Chart.js carregado');
+            } else {
+                console.error('Chart.js NÃO carregado');
+            }
+
+            // Verificar se Bootstrap carregou
+            if (typeof bootstrap !== 'undefined') {
+                console.log('Bootstrap carregado');
+            } else {
+                console.error('Bootstrap NÃO carregado');
+            }
+        });
+
+        // Verificar erros de carregamento de módulos
+        window.addEventListener('error', function (e) {
+            console.error('Erro de carregamento:', e);
+        });
+
+        window.addEventListener('unhandledrejection', function (e) {
+            console.error('Promise rejeitada:', e.reason);
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Debug Dashboard</h1>
+    <div id="status">Carregando...</div>
+
+    <script type="module">
+        try {
+            console.log('Tentando importar módulos...');
+
+            // Testar importações básicas
+            import('./static/js/modules/config.js').then(module => {
+                console.log('Config importado:', module);
+                document.getElementById('status').textContent = 'Config OK';
+            }).catch(err => {
+                console.error('Erro ao importar config:', err);
+                document.getElementById('status').textContent = 'Erro no config';
+            });
+
+        } catch (error) {
+            console.error('Erro geral:', error);
+            document.getElementById('status').textContent = 'Erro geral';
+        }
+    </script>
+</body>
+
+</html>

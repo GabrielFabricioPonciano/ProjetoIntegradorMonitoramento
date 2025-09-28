@@ -7,6 +7,7 @@ import { UIManager } from './modules/ui.js';
 import { KPIManager } from './modules/kpis.js';
 import { ChartManager } from './modules/charts.js';
 import { ReportManager } from './modules/reports.js';
+import { AIManager } from './modules/ai.js';
 
 class EnvironmentalDashboard {
     constructor() {
@@ -17,6 +18,7 @@ class EnvironmentalDashboard {
         this.kpis = new KPIManager();
         this.charts = new ChartManager();
         this.reports = new ReportManager(this.notifications);
+        this.ai = new AIManager();
 
         // Estado
         this.currentPeriod = CONFIG.DEFAULT_PERIOD;
@@ -57,6 +59,11 @@ class EnvironmentalDashboard {
             await Utils.delay(200);
             await this.createCharts();
             Utils.logInfo('Dashboard', 'Gráficos criados');
+
+            // Inicializar IA
+            // await this.initializeAI();
+            console.log('IA desabilitada temporariamente');
+            Utils.logInfo('Dashboard', 'IA desabilitada temporariamente');
 
             this.ui.updateLastUpdatedTime();
             this.startAutoRefresh();
@@ -286,20 +293,32 @@ class EnvironmentalDashboard {
         };
     }
 
-    // Cleanup
-    destroy() {
-        this.stopAutoRefresh();
-        this.charts.destroyCharts();
-        this.api.clearCache();
-        Utils.logInfo('Dashboard', 'Dashboard destruído');
+    async initializeAI() {
+        Utils.logInfo('Dashboard', 'Inicializando sistema de IA...');
+
+        try {
+            await this.ai.initializeAI();
+            Utils.logInfo('Dashboard', 'Sistema de IA inicializado com sucesso');
+        } catch (error) {
+            Utils.logError('Dashboard', 'Erro ao inicializar IA', error);
+            // Mostrar aviso mas não falhar o dashboard
+            console.warn('IA não disponível, continuando sem ela');
+            this.notifications.showError('Sistema de IA temporariamente indisponível');
+        }
     }
 }
 
 // Inicializar dashboard quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
-    Utils.logInfo('Dashboard', 'DOM carregado, inicializando dashboard...');
+    console.log('DOM carregado, inicializando dashboard...');
     window.dashboard = new EnvironmentalDashboard();
 });
 
-// Exportar para debug
-window.EnvironmentalDashboard = EnvironmentalDashboard;
+// Adicionar listener para erros não capturados
+window.addEventListener('error', (event) => {
+    console.error('Erro não capturado:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Promise rejeitada não tratada:', event.reason);
+});

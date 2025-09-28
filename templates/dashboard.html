@@ -352,8 +352,130 @@
         </div>
     </div>
 </div>
+
+<!-- Seção de Inteligência Artificial -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-brain text-primary me-2" aria-hidden="true"></i>
+                        Inteligência Artificial
+                        <span id="ai-status-badge" class="badge bg-secondary ms-2">
+                            <i class="fas fa-spinner fa-spin me-1"></i>Carregando...
+                        </span>
+                    </h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Skeleton loading para IA -->
+                <div id="ai-skeleton" class="row g-4">
+                    <div class="col-md-4">
+                        <div class="skeleton-loader">
+                            <div class="skeleton skeleton-icon mx-auto mb-3"
+                                style="width: 60px; height: 60px; border-radius: 50%;"></div>
+                            <div class="skeleton skeleton-title mb-2"></div>
+                            <div class="skeleton skeleton-text mb-1"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="skeleton-loader">
+                            <div class="skeleton skeleton-icon mx-auto mb-3"
+                                style="width: 60px; height: 60px; border-radius: 50%;"></div>
+                            <div class="skeleton skeleton-title mb-2"></div>
+                            <div class="skeleton skeleton-text mb-1"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="skeleton-loader">
+                            <div class="skeleton skeleton-icon mx-auto mb-3"
+                                style="width: 60px; height: 60px; border-radius: 50%;"></div>
+                            <div class="skeleton skeleton-title mb-2"></div>
+                            <div class="skeleton skeleton-text mb-1"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conteúdo da IA -->
+                <div id="ai-content" style="display: none;">
+                    <div class="row g-4">
+                        <!-- Anomalias -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="kpi-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                                        <i class="fas fa-exclamation-circle" aria-label="Ícone de anomalias"></i>
+                                    </div>
+                                    <h6 class="card-title text-muted small mb-3">DETECÇÃO DE ANOMALIAS</h6>
+                                    <div id="ai-anomalies-content">
+                                        <div class="text-center py-3">
+                                            <i class="fas fa-spinner fa-spin fa-2x text-warning mb-2"></i>
+                                            <p class="mb-0 text-muted">Analisando dados...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Previsões -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="kpi-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                                        <i class="fas fa-chart-line" aria-label="Ícone de previsões"></i>
+                                    </div>
+                                    <h6 class="card-title text-muted small mb-3">PREVISÕES</h6>
+                                    <div id="ai-predictions-content">
+                                        <div class="text-center py-3">
+                                            <i class="fas fa-spinner fa-spin fa-2x text-info mb-2"></i>
+                                            <p class="mb-0 text-muted">Calculando tendências...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Padrões -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="kpi-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                                        <i class="fas fa-search" aria-label="Ícone de padrões"></i>
+                                    </div>
+                                    <h6 class="card-title text-muted small mb-3">ANÁLISE DE PADRÕES</h6>
+                                    <div id="ai-patterns-content">
+                                        <div class="text-center py-3">
+                                            <i class="fas fa-spinner fa-spin fa-2x text-success mb-2"></i>
+                                            <p class="mb-0 text-muted">Identificando padrões...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script type="module" src="{% static 'js/dashboard-main.js' %}"></script>
+<!-- Teste básico primeiro -->
+<script>
+    console.log('Dashboard HTML carregado');
+    console.log('Chart.js disponível:', typeof Chart);
+    console.log('Bootstrap disponível:', typeof bootstrap);
+</script>
+
+<!-- Dashboard completo -->
+<script src="{% static 'js/dashboard-core.js' %}"></script>
+<script src="{% static 'js/dashboard-measures.js' %}"></script>
+<script src="{% static 'js/dashboard-charts.js' %}"></script>
+<script src="{% static 'js/dashboard-violations.js' %}"></script>
+<script src="{% static 'js/dashboard-ai.js' %}"></script>
 {% endblock %}
