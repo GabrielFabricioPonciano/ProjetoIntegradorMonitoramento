@@ -3,7 +3,8 @@
 
 EnvironmentalDashboard.prototype.loadViolations = async function() {
     console.log('Carregando violações...');
-    const violationsUrl = `/api/violations?days=${this.currentPeriod}&limit=10`;
+    const limit = document.getElementById('violations-limit')?.value || 10;
+    const violationsUrl = `/api/violations?days=${this.currentPeriod}&limit=${limit}`;
     console.log('URL violações:', violationsUrl);
 
     try {
@@ -17,13 +18,13 @@ EnvironmentalDashboard.prototype.loadViolations = async function() {
         this.violations = violations;
         console.log('Violações armazenadas na instância:', this.violations?.length || 0);
 
-        this.updateViolationsTable(violations);
+        this.filterViolations();
 
     } catch (error) {
         console.error('Erro ao carregar violações:', error);
         // Em caso de erro, mostrar tabela vazia
         this.violations = [];
-        this.updateViolationsTable([]);
+        this.filterViolations();
     }
 };
 
@@ -123,4 +124,33 @@ EnvironmentalDashboard.prototype.updateViolationsTable = function(violations) {
     `;
 
     console.log('Tabela de violações atualizada com', violations.length, 'registros');
+};
+
+EnvironmentalDashboard.prototype.filterViolations = function() {
+    if (!this.violations) return;
+
+    const showTemp = document.getElementById('filter-temp-violations')?.checked ?? true;
+    const showHumidity = document.getElementById('filter-humidity-violations')?.checked ?? true;
+
+    let filtered = this.violations;
+
+    if (!showTemp || !showHumidity) {
+        filtered = this.violations.filter(violation => {
+            const temp = parseFloat(violation.temperature || 0);
+            const humidity = parseFloat(violation.humidity || violation.relative_humidity || violation.rh || 0);
+
+            const tempViolation = temp < 17 || temp > 19.5;
+            const rhViolation = humidity > 62;
+
+            if (!showTemp && tempViolation) return false;
+            if (!showHumidity && rhViolation) return false;
+            if (showTemp && showHumidity) return tempViolation || rhViolation;
+            if (showTemp) return tempViolation;
+            if (showHumidity) return rhViolation;
+
+            return false;
+        });
+    }
+
+    this.updateViolationsTable(filtered);
 };

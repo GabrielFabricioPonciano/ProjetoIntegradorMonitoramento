@@ -325,6 +325,28 @@
                             Últimas Violações de Limites
                         </h5>
                     </div>
+                    <div class="col-auto">
+                        <div class="d-flex gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filter-temp-violations" checked>
+                                <label class="form-check-label small" for="filter-temp-violations">
+                                    Temperatura
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filter-humidity-violations" checked>
+                                <label class="form-check-label small" for="filter-humidity-violations">
+                                    Umidade
+                                </label>
+                            </div>
+                            <select class="form-select form-select-sm" id="violations-limit" style="width: auto;">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-body p-0">

@@ -78,6 +78,23 @@ class EnvironmentalDashboard {
         if (forceCycleBtn) {
             forceCycleBtn.addEventListener('click', () => this.forceCycle());
         }
+
+        // Filtros de violações
+        const tempFilter = document.getElementById('filter-temp-violations');
+        const humidityFilter = document.getElementById('filter-humidity-violations');
+        const limitSelect = document.getElementById('violations-limit');
+
+        if (tempFilter) {
+            tempFilter.addEventListener('change', () => this.filterViolations());
+        }
+        if (humidityFilter) {
+            humidityFilter.addEventListener('change', () => this.filterViolations());
+        }
+        if (limitSelect) {
+            limitSelect.addEventListener('change', async () => {
+                await this.loadViolations();
+            });
+        }
     }
 
     async loadData() {
