@@ -2,11 +2,16 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import render
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+
+def debug_view(request):
+    return render(request, 'debug.html')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("monitoring.urls")),  # suas APIs
+    path("debug/", debug_view, name="debug"),  # Debug page
 
     # OpenAPI schema (JSON)
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

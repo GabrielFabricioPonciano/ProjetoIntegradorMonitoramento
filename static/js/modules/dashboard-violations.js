@@ -10,11 +10,60 @@ class DashboardViolations {
             humidity: true
         };
         this.currentLimit = 10;
+        this.currentSort = {
+            column: 'timestamp',
+            order: 'desc'
+        };
         this.init();
     }
 
     init() {
         console.log('Dashboard Violations: Initializing...');
+        this.bindSortingEvents();
+    }
+
+    bindSortingEvents() {
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', (e) => {
+                e.preventDefault();
+                const column = header.getAttribute('data-sort');
+                this.handleSort(column);
+            });
+            header.style.cursor = 'pointer';
+        });
+    }
+
+    handleSort(column) {
+        // Toggle sort order if same column, otherwise set to desc
+        if (this.currentSort.column === column) {
+            this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.currentSort.column = column;
+            this.currentSort.order = 'desc';
+        }
+
+        // Update sort icons
+        this.updateSortIcons();
+
+        // Reload data with new sorting
+        if (window.dashboard && window.dashboard.core) {
+            window.dashboard.core.loadViolations();
+        }
+    }
+
+    updateSortIcons() {
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        sortableHeaders.forEach(header => {
+            const sortIcon = header.querySelector('.sort-icon');
+            const column = header.getAttribute('data-sort');
+
+            if (column === this.currentSort.column) {
+                sortIcon.className = `fas fa-sort-${this.currentSort.order === 'asc' ? 'up' : 'down'} sort-icon text-blue-400`;
+            } else {
+                sortIcon.className = 'fas fa-sort sort-icon text-slate-500';
+            }
+        });
     }
 
     updateViolationsUI(violationsData) {
@@ -23,8 +72,11 @@ class DashboardViolations {
         const tableBody = document.getElementById('violations-table');
         if (!tableBody) return;
 
-        if (violationsData && Array.isArray(violationsData) && violationsData.length > 0) {
-            const violationsHtml = violationsData.map(violation =>
+        // Apply current sorting
+        let sortedData = this.sortViolations(violationsData, this.currentSort.column, this.currentSort.order);
+
+        if (sortedData && Array.isArray(sortedData) && sortedData.length > 0) {
+            const violationsHtml = sortedData.map(violation =>
                 this.createViolationRow(violation)
             ).join('');
 
@@ -39,6 +91,9 @@ class DashboardViolations {
                 </tr>
             `;
         }
+
+        // Update sort icons after rendering
+        this.updateSortIcons();
     }
 
     createViolationRow(violation) {

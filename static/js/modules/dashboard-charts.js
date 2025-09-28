@@ -82,6 +82,25 @@ class DashboardCharts {
         // Destroy existing charts first
         this.destroyCharts();
 
+        // Add interactive legend container for temperature chart
+        const tempContainer = document.querySelector('.chart-container').parentElement;
+        if (tempContainer && !tempContainer.querySelector('.chart-legend')) {
+            const legend = document.createElement('div');
+            legend.className = 'chart-legend';
+            legend.innerHTML = `
+                <div class="flex items-center justify-center gap-4 mt-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-pink-400 rounded-full"></div>
+                        <span class="text-sm text-slate-300">Temperatura</span>
+                    </div>
+                    <button class="chart-toggle-btn text-xs px-2 py-1 bg-slate-700 text-white rounded hover:bg-slate-600" onclick="toggleChart('temp')">
+                        Alternar
+                    </button>
+                </div>
+            `;
+            tempContainer.appendChild(legend);
+        }
+
         // Temperature chart
         const tempCtx = document.getElementById('tempChart');
         if (tempCtx) {
@@ -106,6 +125,12 @@ class DashboardCharts {
                 },
                 options: {
                     ...this.chartOptions,
+                    plugins: {
+                        ...this.chartOptions.plugins,
+                        legend: {
+                            display: false // Hide built-in legend, we have custom one
+                        }
+                    },
                     scales: {
                         ...this.chartOptions.scales,
                         y: {
@@ -120,6 +145,25 @@ class DashboardCharts {
                     }
                 }
             });
+        }
+
+        // Add interactive legend container for humidity chart
+        const humidityContainer = document.querySelectorAll('.chart-container')[1]?.parentElement;
+        if (humidityContainer && !humidityContainer.querySelector('.chart-legend')) {
+            const legend = document.createElement('div');
+            legend.className = 'chart-legend';
+            legend.innerHTML = `
+                <div class="flex items-center justify-center gap-4 mt-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
+                        <span class="text-sm text-slate-300">Umidade</span>
+                    </div>
+                    <button class="chart-toggle-btn text-xs px-2 py-1 bg-slate-700 text-white rounded hover:bg-slate-600" onclick="toggleChart('humidity')">
+                        Alternar
+                    </button>
+                </div>
+            `;
+            humidityContainer.appendChild(legend);
         }
 
         // Humidity chart
@@ -146,6 +190,12 @@ class DashboardCharts {
                 },
                 options: {
                     ...this.chartOptions,
+                    plugins: {
+                        ...this.chartOptions.plugins,
+                        legend: {
+                            display: false // Hide built-in legend, we have custom one
+                        }
+                    },
                     scales: {
                         ...this.chartOptions.scales,
                         y: {

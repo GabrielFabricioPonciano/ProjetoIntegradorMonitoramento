@@ -25,7 +25,10 @@
     body {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         min-height: 100vh;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family: 'Inter<!-- Dashboard Module Scripts with Cache Busting -->
+ <script src="{% static 'js/modules/dashboard-core.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-ui.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-data.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-charts.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-violations.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-ai.js' %}?v=2"></script>< !-- Main Dashboard Initializer --><script src="{% static 'js/dashboard-init.js' %}?v=2"></script>ui,
+        -apple-system,
+        sans-serif;
         color: var(--text-primary);
     }
 
@@ -132,6 +135,170 @@
         background: #64748b;
     }
 
+    /* Custom Range Slider */
+    .custom-range-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: linear-gradient(to right, #3b82f6, #8b5cf6);
+        outline: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .custom-range-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffffff, #f1f5f9);
+        border: 3px solid #3b82f6;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .custom-range-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+    }
+
+    .custom-range-slider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffffff, #f1f5f9);
+        border: 3px solid #3b82f6;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .custom-range-slider::-moz-range-thumb:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+    }
+
+    /* Quick Period Buttons */
+    .quick-period-btn {
+        flex: 1;
+        min-height: 60px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.75rem;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        padding: 0.75rem;
+    }
+
+    .quick-period-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-period-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        flex: 1;
+        min-height: 60px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(139, 92, 246, 0.8));
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.75rem;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        padding: 0.75rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .action-btn:hover::before {
+        left: 100%;
+    }
+
+    .action-btn:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(139, 92, 246, 0.9));
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+
+    .action-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Custom Period Panel */
+    .custom-period-panel {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-period-panel input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        color: white;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .custom-period-panel input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .custom-period-panel button {
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border: none;
+        border-radius: 0.5rem;
+        color: white;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .custom-period-panel button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
     /* KPI Icons */
     .kpi-icon {
         width: 80px;
@@ -225,8 +392,8 @@
         </h1>
         <p class="text-xl text-slate-300 mb-8">Sistema avançado de monitoramento de condições ambientais</p>
         <div class="status-badge mx-auto">
-            <i class="fas fa-circle text-green-400"></i>
-            <span>Sistema Online</span>
+            <i class="fas fa-circle text-green-400 animate-pulse" id="status-indicator"></i>
+            <span id="status-text">Sistema Online</span>
             <small class="ms-2 text-slate-400" id="last-updated">Atualizado às --:--</small>
         </div>
     </header>
@@ -239,93 +406,184 @@
         </h3>
 
         <!-- Period Selector -->
-        <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <input type="radio" class="btn-check" name="period" id="period-1" value="1" autocomplete="off">
-            <label
-                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
-                for="period-1">1 dia</label>
+        <div class="mb-8">
+            <div class="text-center mb-4">
+                <h4 class="text-lg font-medium text-white mb-2">Selecionar Período</h4>
+                <p class="text-sm text-slate-400">Escolha o período para análise dos dados</p>
+            </div>
 
-            <input type="radio" class="btn-check" name="period" id="period-7" value="7" autocomplete="off">
-            <label
-                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
-                for="period-7">7 dias</label>
-
-            <input type="radio" class="btn-check" name="period" id="period-30" value="30" autocomplete="off" checked>
-            <label
-                class="px-6 py-3 bg-white/20 border border-white/40 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer shadow-lg"
-                for="period-30">30 dias</label>
-
-            <input type="radio" class="btn-check" name="period" id="period-90" value="90" autocomplete="off">
-            <label
-                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
-                for="period-90">90 dias</label>
-
-            <input type="radio" class="btn-check" name="period" id="period-custom" value="custom" autocomplete="off">
-            <label
-                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
-                for="period-custom">
-                <i class="fas fa-calendar-plus me-2"></i>Personalizado
-            </label>
+            <div class="flex flex-wrap justify-center gap-3 period-controls">
+                <button type="button"
+                    class="period-btn px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95"
+                    data-period="1" onclick="changePeriod(1)">
+                    <i class="fas fa-clock mr-2"></i>1 dia
+                </button>
+                <button type="button"
+                    class="period-btn px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95"
+                    data-period="7" onclick="changePeriod(7)">
+                    <i class="fas fa-calendar-week mr-2"></i>7 dias
+                </button>
+                <button type="button"
+                    class="period-btn px-5 py-3 bg-white/20 border-2 border-white/40 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer shadow-lg hover:bg-white/25 hover:border-white/50 hover:scale-105 active:scale-95 active"
+                    data-period="30" onclick="changePeriod(30)">
+                    <i class="fas fa-calendar-alt mr-2"></i>30 dias
+                </button>
+                <button type="button"
+                    class="period-btn px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95"
+                    data-period="90" onclick="changePeriod(90)">
+                    <i class="fas fa-calendar-check mr-2"></i>90 dias
+                </button>
+                <button type="button"
+                    class="period-btn px-5 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:from-purple-500/30 hover:to-pink-500/30 hover:border-purple-400/50 hover:scale-105 active:scale-95"
+                    data-period="custom" onclick="showCustomPeriod()">
+                    <i class="fas fa-cog mr-2"></i>Personalizado
+                </button>
+            </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex flex-wrap justify-center gap-4">
-            <button type="button"
-                class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg transition-all duration-300 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl hover:scale-105 flex items-center gap-2">
-                <i class="fas fa-play-circle"></i>
-                Forçar Ciclo
-            </button>
+        <div class="border-t border-white/10 pt-6">
+            <div class="text-center mb-4">
+                <h4 class="text-lg font-medium text-white mb-2">Ações do Sistema</h4>
+                <p class="text-sm text-slate-400">Controles avançados e relatórios</p>
+            </div>
 
-            <div class="dropdown">
-                <button type="button"
-                    class="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded-lg transition-all duration-300 hover:from-green-600 hover:to-teal-700 hover:shadow-xl hover:scale-105 dropdown-toggle flex items-center gap-2"
-                    data-bs-toggle="dropdown">
-                    <i class="fas fa-file-export"></i>
-                    Relatórios
+            <div class="flex flex-wrap justify-center gap-4">
+                <button type="button" id="force-cycle-btn"
+                    class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2">
+                    <i class="fas fa-play-circle"></i>
+                    <span class="hidden sm:inline">Forçar Ciclo</span>
+                    <span class="sm:hidden">Atualizar</span>
                 </button>
-                <ul class="dropdown-menu bg-slate-800 border-slate-600">
-                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
-                            onclick="downloadReport('pdf', 30); return false;">
-                            <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (30 dias)</button></li>
-                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
-                            onclick="downloadReport('excel', 30); return false;">
-                            <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (30 dias)</button></li>
-                    <li>
-                        <hr class="dropdown-divider border-slate-600">
-                    </li>
-                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
-                            onclick="downloadReport('pdf', 90); return false;">
-                            <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (90 dias)</button></li>
-                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
-                            onclick="downloadReport('excel', 90); return false;">
-                            <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (90 dias)</button></li>
-                </ul>
+
+                <button type="button" onclick="window.dashboard.core.debug(); return false;"
+                    class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold rounded-xl transition-all duration-300 hover:from-gray-600 hover:to-gray-700 hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2">
+                    <i class="fas fa-bug"></i>
+                    <span class="hidden sm:inline">Debug Info</span>
+                    <span class="sm:hidden">Debug</span>
+                </button>
+
+                <div class="dropdown">
+                    <button type="button"
+                        class="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded-xl transition-all duration-300 hover:from-green-600 hover:to-teal-700 hover:shadow-xl hover:scale-105 active:scale-95 dropdown-toggle flex items-center gap-2"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-file-export"></i>
+                        <span class="hidden sm:inline">Relatórios</span>
+                        <span class="sm:hidden">Exportar</span>
+                    </button>
+                    <ul class="dropdown-menu bg-slate-800 border-slate-600 shadow-xl">
+                        <li><button
+                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
+                                onclick="downloadReport('pdf', 30); return false;">
+                                <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (30 dias)</button></li>
+                        <li><button
+                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
+                                onclick="downloadReport('excel', 30); return false;">
+                                <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (30 dias)</button></li>
+                        <li>
+                            <hr class="dropdown-divider border-slate-600 my-1">
+                        </li>
+                        <li><button
+                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
+                                onclick="downloadReport('pdf', 90); return false;">
+                                <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (90 dias)</button></li>
+                        <li><button
+                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
+                                onclick="downloadReport('excel', 90); return false;">
+                                <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (90 dias)</button></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Custom Period Panel -->
-    <div id="custom-period-panel" class="custom-period-panel">
-        <div class="slider-container">
-            <div class="slider-label">
-                <span>Período Personalizado (dias)</span>
-                <span class="slider-value" id="slider-value">30 dias</span>
-            </div>
-            <input type="range" class="custom-slider" id="period-slider" min="1" max="365" value="30">
-            <div class="d-flex justify-content-between mt-2">
-                <small style="color: rgba(255,255,255,0.6);">1 dia</small>
-                <small style="color: rgba(255,255,255,0.6);">365 dias</small>
-            </div>
+    <div id="custom-period-panel" class="glass-card p-8 mb-12 animate-fade-in-up" style="display: none;">
+        <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold text-white mb-2 flex items-center justify-center">
+                Período Personalizado
+            </h3>
+            <p class="text-slate-300">Selecione o período desejado para análise</p>
         </div>
-        <div class="text-center">
-            <button class="action-btn primary" onclick="dashboard.applyCustomPeriod()">
-                <i class="fas fa-check"></i>
-                Aplicar Período
-            </button>
+
+        <div class="max-w-md mx-auto">
+            <!-- Slider Container -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <label for="period-slider" class="text-lg font-semibold text-white">Período (dias)</label>
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 rounded-lg">
+                        <span class="text-white font-bold text-lg" id="slider-value">30</span>
+                        <span class="text-blue-100 text-sm">dias</span>
+                    </div>
+                </div>
+
+                <!-- Custom Range Slider -->
+                <div class="relative">
+                    <input type="range" class="custom-range-slider" id="period-slider" min="1" max="365" value="30">
+                    <div class="flex justify-between text-sm text-slate-400 mt-2">
+                        <span>1 dia</span>
+                        <span>365 dias</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Period Buttons -->
+            <div class="grid grid-cols-2 gap-3 mb-8">
+                <button class="quick-period-btn" data-days="7">
+                    <span class="font-semibold">7 dias</span>
+                    <span class="text-xs opacity-75">Semana</span>
+                </button>
+                <button class="quick-period-btn" data-days="30">
+                    <span class="font-semibold">30 dias</span>
+                    <span class="text-xs opacity-75">Mês</span>
+                </button>
+                <button class="quick-period-btn" data-days="90">
+                    <span class="font-semibold">90 dias</span>
+                    <span class="text-xs opacity-75">Trimestre</span>
+                </button>
+                <button class="quick-period-btn" data-days="180">
+                    <span class="font-semibold">180 dias</span>
+                    <span class="text-xs opacity-75">Semestre</span>
+                </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4 justify-center">
+                <button
+                    class="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg transition-all duration-300 hover:from-gray-700 hover:to-gray-800 hover:shadow-lg flex items-center gap-2"
+                    onclick="dashboard.hideCustomPeriod()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button
+                    class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-700 hover:shadow-lg hover:scale-105 flex items-center gap-2"
+                    onclick="dashboard.applyCustomPeriod()">
+                    <i class="fas fa-check"></i>
+                    Aplicar Período
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Info Banner -->
+    <!-- Debug Panel -->
+    <div id="debug-panel" class="glass-card p-6 mb-12 animate-fade-in-up"
+        style="display: none; position: fixed; bottom: 20px; right: 20px; width: 400px; max-height: 300px; overflow-y: auto; z-index: 9999; font-size: 12px;">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-white">Debug Console</h3>
+            <button onclick="document.getElementById('debug-panel').style.display='none'"
+                class="text-white hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="debug-output"
+            class="text-green-400 font-mono text-xs bg-slate-900 p-2 rounded max-h-200 overflow-y-auto"></div>
+    </div>
+
+    <!-- Debug Toggle Button -->
+    <button onclick="document.getElementById('debug-panel').style.display='block'"
+        style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; background: #3b82f6; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+        <i class="fas fa-bug"></i>
+    </button>
     <section class="info-banner">
         <div class="banner-content">
             <div class="banner-icon">
@@ -344,10 +602,7 @@
         <!-- Temperature -->
         <div class="glass-card p-6 animate-fade-in-up">
             <div class="kpi-icon gradient-danger mx-auto">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
-                    <path
-                        d="M12 2C13.1 2 14 2.9 14 4V5H16V7H14V8C14 9.1 13.1 10 12 10S10 9.1 10 8V7H8V5H10V4C10 2.9 10.9 2 12 2M7 11H17V21C17 22.1 16.1 23 15 23H9C7.9 23 7 22.1 7 21V11Z" />
-                </svg>
+                <i class="fas fa-thermometer-half text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="temp-skeleton"></div>
             <div class="text-center" id="temp-content" style="display: none;">
@@ -360,10 +615,7 @@
         <!-- Humidity -->
         <div class="glass-card p-6 animate-fade-in-up">
             <div class="kpi-icon gradient-info mx-auto">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
-                    <path
-                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
-                </svg>
+                <i class="fas fa-tint text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="humidity-skeleton"></div>
             <div class="text-center" id="humidity-content" style="display: none;">
@@ -376,9 +628,7 @@
         <!-- Violations -->
         <div class="glass-card p-6 animate-fade-in-up">
             <div class="kpi-icon gradient-warning mx-auto">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
-                    <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" />
-                </svg>
+                <i class="fas fa-exclamation-triangle text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="violations-skeleton"></div>
             <div class="text-center" id="violations-content" style="display: none;">
@@ -392,10 +642,7 @@
         <!-- Measurements -->
         <div class="glass-card p-6 animate-fade-in-up">
             <div class="kpi-icon gradient-success mx-auto">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
-                    <path
-                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
-                </svg>
+                <i class="fas fa-chart-bar text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="measurements-skeleton"></div>
             <div class="text-center" id="measurements-content" style="display: none;">
@@ -412,10 +659,7 @@
         <div class="glass-card p-6 animate-fade-in-up">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-xl font-bold text-white flex items-center">
-                    <svg class="w-6 h-6 mr-3 text-red-400" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12 2C13.1 2 14 2.9 14 4V5H16V7H14V8C14 9.1 13.1 10 12 10S10 9.1 10 8V7H8V5H10V4C10 2.9 10.9 2 12 2M7 11H17V21C17 22.1 16.1 23 15 23H9C7.9 23 7 22.1 7 21V11Z" />
-                    </svg>
+                    <i class="fas fa-thermometer-half mr-3 text-red-400"></i>
                     Temperatura ao Longo do Tempo
                 </h3>
                 <div class="flex space-x-2">
@@ -436,10 +680,7 @@
         <div class="glass-card p-6 animate-fade-in-up">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-xl font-bold text-white flex items-center">
-                    <svg class="w-6 h-6 mr-3 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
-                    </svg>
+                    <i class="fas fa-tint mr-3 text-blue-400"></i>
                     Umidade ao Longo do Tempo
                 </h3>
                 <div class="flex space-x-2">
@@ -461,9 +702,7 @@
     <section class="glass-card p-6 mb-12 animate-fade-in-up">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
             <h3 class="text-xl font-bold text-white flex items-center mb-4 lg:mb-0">
-                <svg class="w-6 h-6 mr-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" />
-                </svg>
+                <i class="fas fa-exclamation-triangle mr-3 text-yellow-400"></i>
                 Últimas Violações
             </h3>
 
@@ -503,10 +742,22 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-600">
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Data/Hora</th>
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Temperatura</th>
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Umidade</th>
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Motivo</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="timestamp">
+                            <i class="fas fa-clock me-2"></i>Data/Hora
+                            <i class="fas fa-sort sort-icon text-slate-500"></i>
+                        </th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="temperature">
+                            <i class="fas fa-thermometer-half me-2"></i>Temperatura
+                            <i class="fas fa-sort sort-icon text-slate-500"></i>
+                        </th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="humidity">
+                            <i class="fas fa-tint me-2"></i>Umidade
+                            <i class="fas fa-sort sort-icon text-slate-500"></i>
+                        </th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="reason">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Motivo
+                            <i class="fas fa-sort sort-icon text-slate-500"></i>
+                        </th>
                     </tr>
                 </thead>
                 <tbody id="violations-table" class="text-slate-300">
@@ -525,10 +776,7 @@
     <section class="mb-12 animate-fade-in-up">
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-white mb-3 flex items-center justify-center">
-                <svg class="w-8 h-8 mr-3 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path
-                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
-                </svg>
+                <i class="fas fa-brain mr-3 text-purple-400"></i>
                 Inteligência Artificial
             </h2>
             <p class="text-lg text-slate-300">Análise avançada e previsões automatizadas</p>
@@ -539,9 +787,7 @@
             <div class="glass-card p-6 text-center">
                 <div
                     class="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" />
-                    </svg>
+                    <i class="fas fa-exclamation-circle text-2xl text-white"></i>
                 </div>
                 <h4 class="text-lg font-semibold text-white mb-4">Detecção de Anomalias</h4>
                 <div id="ai-anomalies-content">
@@ -556,10 +802,7 @@
             <div class="glass-card p-6 text-center">
                 <div
                     class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M16,4L9,8.04V12.54L16,16.5V12.5L9,8.5V8.04L16,4M16,3C16.55,3 17,3.45 17,4V5L9,9V10L2,6V5C2,3.89 2.89,3 4,3H16M2,7L9,11V12.5L2,8.5V7M16,13.5L9,9.5V10L16,14V13.5M16,21C16.55,21 17,21.45 17,22V23H9V22C9,21.45 9.45,21 10,21H16Z" />
-                    </svg>
+                    <i class="fas fa-chart-line text-2xl text-white"></i>
                 </div>
                 <h4 class="text-lg font-semibold text-white mb-4">Previsões</h4>
                 <div id="ai-predictions-content">
@@ -574,10 +817,7 @@
             <div class="glass-card p-6 text-center">
                 <div
                     class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
-                    </svg>
+                    <i class="fas fa-search text-2xl text-white"></i>
                 </div>
                 <h4 class="text-lg font-semibold text-white mb-4">Análise de Padrões</h4>
                 <div id="ai-patterns-content">
@@ -607,4 +847,69 @@
 
 <!-- Main Dashboard Initializer -->
 <script src="{% static 'js/dashboard-init.js' %}"></script>
+
+<!-- Custom Period Panel JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('🔧 Custom Period Panel: DOMContentLoaded fired');
+
+        // Slider functionality
+        const slider = document.getElementById('period-slider');
+        const sliderValue = document.getElementById('slider-value');
+
+        if (slider && sliderValue) {
+            slider.addEventListener('input', function () {
+                sliderValue.textContent = this.value;
+            });
+        }
+
+        // Quick period buttons
+        const quickPeriodButtons = document.querySelectorAll('.quick-period-btn');
+        quickPeriodButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const days = parseInt(this.getAttribute('data-days'));
+                if (slider) {
+                    slider.value = days;
+                    sliderValue.textContent = days;
+                }
+            });
+        });
+
+        // Force cycle button
+        const forceCycleBtn = document.getElementById('force-cycle-btn');
+        if (forceCycleBtn) {
+            forceCycleBtn.addEventListener('click', function () {
+                console.log('🔄 Force Cycle button clicked');
+                // Add loading state
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span class="hidden sm:inline">Atualizando...</span><span class="sm:hidden">...</span>';
+                this.disabled = true;
+
+                // Simulate API call
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-play-circle"></i> <span class="hidden sm:inline">Forçar Ciclo</span><span class="sm:hidden">Atualizar</span>';
+                    this.disabled = false;
+
+                    // Show success toast
+                    const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
+                    document.getElementById('success-message').textContent = 'Ciclo forçado executado com sucesso!';
+                    successToast.show();
+
+                    // Reload dashboard data - call the core module directly
+                    if (window.dashboard && window.dashboard.core && typeof window.dashboard.core.reloadAllData === 'function') {
+                        console.log('🔄 Calling dashboard.core.reloadAllData()');
+                        window.dashboard.core.reloadAllData();
+                    } else {
+                        console.error('❌ dashboard.core.reloadAllData not available');
+                        console.log('Available dashboard object:', window.dashboard);
+                    }
+                }, 2000);
+            });
+        }
+
+        console.log('🔧 Custom Period Panel: Initialization completed');
+    });
+</script><!-- CSS Debug Script -->
+<script src="{% static 'js/debug-css.js' %}"></script>
+<!-- Force Show KPIs Script -->
+<script src="{% static 'js/force-show-kpis.js' %}?v=2"></script>
 {% endblock %}

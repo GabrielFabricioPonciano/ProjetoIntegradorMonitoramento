@@ -296,6 +296,12 @@ class EnvironmentalDashboard {
         // Feedback visual
         this.showSuccessToast(`Período personalizado de ${days} dias aplicado!`);
     }
+
+    // Método público para iniciar o dashboard (chamado pelo dashboard-init.js)
+    start() {
+        console.log('Dashboard start() chamado - iniciando auto-refresh');
+        this.startAutoRefresh();
+    }
 }
 
 // Inicialização quando o DOM estiver pronto

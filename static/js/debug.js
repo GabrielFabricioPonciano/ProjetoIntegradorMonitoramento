@@ -44,6 +44,58 @@ setTimeout(() => {
     }
 }, 3000);
 
+// Debug para controles de período
+setTimeout(() => {
+    console.log('=== CHECKING PERIOD CONTROLS ===');
+
+    // Verificar se os elementos existem
+    const periodCustom = document.getElementById('period-custom');
+    const customPeriodPanel = document.getElementById('custom-period-panel');
+    const periodSlider = document.getElementById('period-slider');
+    const sliderValue = document.getElementById('slider-value');
+    const quickPeriodBtns = document.querySelectorAll('.quick-period-btn');
+
+    console.log('period-custom element:', periodCustom);
+    console.log('custom-period-panel element:', customPeriodPanel);
+    console.log('period-slider element:', periodSlider);
+    console.log('slider-value element:', sliderValue);
+    console.log('quick-period-btn elements:', quickPeriodBtns.length);
+
+    // Testar mostrar painel personalizado
+    window.testShowCustomPeriod = function () {
+        console.log('Testing show custom period panel...');
+        if (customPeriodPanel) {
+            customPeriodPanel.style.display = 'block';
+            console.log('Custom period panel shown');
+        } else {
+            console.error('Custom period panel not found');
+        }
+    };
+
+    // Testar slider
+    window.testSlider = function () {
+        console.log('Testing slider...');
+        if (periodSlider && sliderValue) {
+            periodSlider.value = 45;
+            sliderValue.textContent = '45';
+            console.log('Slider value set to 45');
+        } else {
+            console.error('Slider elements not found');
+        }
+    };
+
+    // Testar botões rápidos
+    window.testQuickButtons = function () {
+        console.log('Testing quick period buttons...');
+        quickPeriodBtns.forEach((btn, index) => {
+            console.log(`Button ${index}:`, btn.textContent.trim(), 'data-days:', btn.getAttribute('data-days'));
+        });
+    };
+
+    console.log('Debug functions available: testShowCustomPeriod(), testSlider(), testQuickButtons()');
+
+}, 4000);
+
 // Verificar se há erros de rede
 window.addEventListener('error', (e) => {
     console.error('JavaScript Error:', e.error);

@@ -20,7 +20,7 @@ class DashboardData {
         if (cached) return cached;
 
         try {
-            const data = await window.dashboard.apiCall(`/summary/?days=${days}`);
+            const data = await window.dashboard.apiCall(`/api/summary/?days=${days}`);
             this.setCached(cacheKey, data);
             return data;
         } catch (error) {
@@ -35,7 +35,7 @@ class DashboardData {
         if (cached) return cached;
 
         try {
-            const data = await window.dashboard.apiCall(`/series/?days=${days}`);
+            const data = await window.dashboard.apiCall(`/api/series/?days=${days}`);
             this.setCached(cacheKey, data);
             return data;
         } catch (error) {
@@ -54,7 +54,7 @@ class DashboardData {
         if (cached) return cached;
 
         try {
-            let url = `/violations/?days=${days}&limit=${limit}`;
+            let url = `/api/violations/?days=${days}&limit=${limit}`;
             if (types && types.length > 0) {
                 url += `&type=${types.join(',')}`;
             }
@@ -74,7 +74,7 @@ class DashboardData {
         if (cached) return cached;
 
         try {
-            const data = await window.dashboard.apiCall(`/ai/?days=${days}`);
+            const data = await window.dashboard.apiCall(`/api/ai/insights/?days=${days}`);
             this.setCached(cacheKey, data);
             return data;
         } catch (error) {

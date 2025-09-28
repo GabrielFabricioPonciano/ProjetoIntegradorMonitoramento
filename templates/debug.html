@@ -1,63 +1,105 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 
 <head>
-    <title>Debug Dashboard</title>
-    <script>
-        // Debug básico
-        console.log('Página carregada');
-
-        // Verificar se módulos existem
-        window.addEventListener('load', function () {
-            console.log('Window loaded');
-
-            // Verificar se Chart.js carregou
-            if (typeof Chart !== 'undefined') {
-                console.log('Chart.js carregado');
-            } else {
-                console.error('Chart.js NÃO carregado');
-            }
-
-            // Verificar se Bootstrap carregou
-            if (typeof bootstrap !== 'undefined') {
-                console.log('Bootstrap carregado');
-            } else {
-                console.error('Bootstrap NÃO carregado');
-            }
-        });
-
-        // Verificar erros de carregamento de módulos
-        window.addEventListener('error', function (e) {
-            console.error('Erro de carregamento:', e);
-        });
-
-        window.addEventListener('unhandledrejection', function (e) {
-            console.error('Promise rejeitada:', e.reason);
-        });
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Debug Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
-    <h1>Debug Dashboard</h1>
-    <div id="status">Carregando...</div>
+    <h1>Dashboard Debug Test</h1>
+    <div id="test-output"
+        style="border: 1px solid #ccc; padding: 10px; margin: 10px 0; max-height: 400px; overflow-y: auto;"></div>
 
-    <script type="module">
-        try {
-            console.log('Tentando importar módulos...');
+    <button onclick="testDashboard()">Test Dashboard Start</button>
+    <button onclick="window.dashboard.debug()">Debug Info</button>
+    <button onclick="window.dashboard.forceUpdate()">Force Update</button>
+    <button onclick="clearLog()">Clear Log</button>
 
-            // Testar importações básicas
-            import('./static/js/modules/config.js').then(module => {
-                console.log('Config importado:', module);
-                document.getElementById('status').textContent = 'Config OK';
-            }).catch(err => {
-                console.error('Erro ao importar config:', err);
-                document.getElementById('status').textContent = 'Erro no config';
-            });
+    <!-- CSRF Token -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="test-token">
 
-        } catch (error) {
-            console.error('Erro geral:', error);
-            document.getElementById('status').textContent = 'Erro geral';
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display: none;">Loading...</div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container">
+        <div id="error-toast" class="toast">
+            <div class="toast-body">
+                <span id="error-message">Erro</span>
+            </div>
+        </div>
+        <div id="success-toast" class="toast">
+            <div class="toast-body">
+                <span id="success-message">Sucesso</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status -->
+    <div id="status-indicator">●</div>
+    <div id="status-text">Sistema Online</div>
+    <div id="last-updated">Atualizado às --:--</div>
+
+    <!-- Dashboard Modules -->
+    <script src="/static/js/modules/dashboard-core.js"></script>
+    <script src="/static/js/modules/dashboard-ui.js"></script>
+    <script src="/static/js/modules/dashboard-data.js"></script>
+    <script src="/static/js/modules/dashboard-charts.js"></script>
+    <script src="/static/js/modules/dashboard-violations.js"></script>
+    <script src="/static/js/modules/dashboard-ai.js"></script>
+
+    <script>
+        function testDashboard() {
+            console.log('=== TESTING DASHBOARD ===');
+            console.log('window.dashboard exists:', !!window.dashboard);
+            console.log('start method exists:', !!(window.dashboard && typeof window.dashboard.start === 'function'));
+            console.log('debug method exists:', !!(window.dashboard && typeof window.dashboard.debug === 'function'));
+
+            if (window.dashboard && typeof window.dashboard.start === 'function') {
+                console.log('Calling window.dashboard.start()...');
+                window.dashboard.start();
+                console.log('window.dashboard.start() completed');
+            } else {
+                console.error('window.dashboard.start not available');
+            }
         }
+
+        function logToPage(message) {
+            const output = document.getElementById('test-output');
+            const div = document.createElement('div');
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('test-output').innerHTML = '';
+        }
+
+        // Override console.log to also log to page
+        const originalLog = console.log;
+        console.log = function (...args) {
+            originalLog.apply(console, args);
+            logToPage(args.join(' '));
+        };
+
+        const originalError = console.error;
+        console.error = function (...args) {
+            originalError.apply(console, args);
+            logToPage('ERROR: ' + args.join(' '));
+        };
+
+        const originalWarn = console.warn;
+        console.warn = function (...args) {
+            originalWarn.apply(console, args);
+            logToPage('WARN: ' + args.join(' '));
+        };
+
+        console.log('Debug test page loaded - click "Test Dashboard Start" to begin testing');
     </script>
 </body>
 
