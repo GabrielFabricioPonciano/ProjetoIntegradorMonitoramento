@@ -1,7 +1,7 @@
 // dashboard-charts.js - Charts functionality
 // This extends the EnvironmentalDashboard class
 
-EnvironmentalDashboard.prototype.prepareChartContainers = function() {
+EnvironmentalDashboard.prototype.prepareChartContainers = function () {
     console.log('Preparando containers dos gráficos...');
     const tempContainer = document.getElementById('temp-chart-container');
     const rhContainer = document.getElementById('rh-chart-container');
@@ -32,7 +32,7 @@ EnvironmentalDashboard.prototype.prepareChartContainers = function() {
     if (rhContainer) rhContainer.offsetHeight;
 };
 
-EnvironmentalDashboard.prototype.createCharts = function() {
+EnvironmentalDashboard.prototype.createCharts = function () {
     console.log('Criando gráficos...');
 
     if (!this.data.series || !Array.isArray(this.data.series)) {
@@ -72,7 +72,7 @@ EnvironmentalDashboard.prototype.createCharts = function() {
     console.log('Processo de criação de gráficos iniciado');
 };
 
-EnvironmentalDashboard.prototype.resizeCharts = function() {
+EnvironmentalDashboard.prototype.resizeCharts = function () {
     console.log('Forçando resize dos gráficos...');
     if (this.charts.temperature) {
         this.charts.temperature.resize();
@@ -84,7 +84,7 @@ EnvironmentalDashboard.prototype.resizeCharts = function() {
     }
 };
 
-EnvironmentalDashboard.prototype.showChartContainers = function() {
+EnvironmentalDashboard.prototype.showChartContainers = function () {
     const tempPlaceholder = document.getElementById('temp-chart-placeholder');
     const tempContainer = document.getElementById('temp-chart-container');
     const rhPlaceholder = document.getElementById('rh-chart-placeholder');
@@ -117,7 +117,7 @@ EnvironmentalDashboard.prototype.showChartContainers = function() {
     console.log('Gráficos finalizados');
 };
 
-EnvironmentalDashboard.prototype.createTemperatureChart = function() {
+EnvironmentalDashboard.prototype.createTemperatureChart = function () {
     console.log('Criando gráfico de temperatura...');
     const canvas = document.getElementById('tempChart');
     if (!canvas) {
@@ -218,7 +218,7 @@ EnvironmentalDashboard.prototype.createTemperatureChart = function() {
     console.log('Gráfico de temperatura criado com sucesso!', this.charts.temperature);
 };
 
-EnvironmentalDashboard.prototype.createHumidityChart = function() {
+EnvironmentalDashboard.prototype.createHumidityChart = function () {
     console.log('=== INICIANDO CRIAÇÃO DO GRÁFICO DE UMIDADE ===');
     const canvas = document.getElementById('rhChart');
     console.log('Canvas rhChart encontrado:', !!canvas);

@@ -68,6 +68,10 @@ class EnvironmentalDashboard {
         const periodRadios = document.querySelectorAll('input[name="period"]');
         periodRadios.forEach(radio => {
             radio.addEventListener('change', async (e) => {
+                // Se for período personalizado, não atualizar automaticamente
+                if (e.target.id === 'period-custom') {
+                    return;
+                }
                 this.currentPeriod = parseInt(e.target.value);
                 await this.refreshData();
             });
@@ -270,6 +274,27 @@ class EnvironmentalDashboard {
             const toast = new bootstrap.Toast(toastEl);
             toast.show();
         }
+    }
+
+    // Método para aplicar período personalizado
+    async applyCustomPeriod() {
+        const slider = document.getElementById('period-slider');
+        if (!slider) {
+            console.error('Slider não encontrado');
+            return;
+        }
+
+        const days = parseInt(slider.value);
+        console.log('Aplicando período personalizado:', days, 'dias');
+
+        // Atualizar período atual
+        this.currentPeriod = days;
+
+        // Recarregar dados
+        await this.refreshData();
+
+        // Feedback visual
+        this.showSuccessToast(`Período personalizado de ${days} dias aplicado!`);
     }
 }
 

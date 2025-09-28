@@ -1,7 +1,7 @@
 // dashboard-ai.js - AI functionality
 // This extends the EnvironmentalDashboard class
 
-EnvironmentalDashboard.prototype.loadAI = async function() {
+EnvironmentalDashboard.prototype.loadAI = async function () {
     console.log('Carregando IA...');
     try {
         const insightsUrl = `/api/ai/insights?days=${this.currentPeriod}`;
@@ -28,7 +28,7 @@ EnvironmentalDashboard.prototype.loadAI = async function() {
     }
 };
 
-EnvironmentalDashboard.prototype.updateAISection = function(insights, anomalies, predictions, patterns) {
+EnvironmentalDashboard.prototype.updateAISection = function (insights, anomalies, predictions, patterns) {
     // Esconder skeleton
     const skeleton = document.getElementById('ai-skeleton');
     if (skeleton) skeleton.style.display = 'none';

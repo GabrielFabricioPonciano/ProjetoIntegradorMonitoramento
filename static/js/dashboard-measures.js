@@ -1,7 +1,7 @@
 // dashboard-measures.js - KPIs and measurements functionality
 // This extends the EnvironmentalDashboard class
 
-EnvironmentalDashboard.prototype.updateKPIs = function() {
+EnvironmentalDashboard.prototype.updateKPIs = function () {
     console.log('Atualizando KPIs...');
     console.log('Dados recebidos:', this.data);
 
@@ -118,7 +118,7 @@ EnvironmentalDashboard.prototype.updateKPIs = function() {
     console.log('KPIs atualizados');
 };
 
-EnvironmentalDashboard.prototype.calculateKPIsFromSeries = function() {
+EnvironmentalDashboard.prototype.calculateKPIsFromSeries = function () {
     console.log('Calculando KPIs a partir da série...');
 
     if (!this.data.series || this.data.series.length === 0) {

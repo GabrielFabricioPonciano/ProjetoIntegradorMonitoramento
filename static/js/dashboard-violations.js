@@ -1,7 +1,7 @@
 // dashboard-violations.js - Violations functionality
 // This extends the EnvironmentalDashboard class
 
-EnvironmentalDashboard.prototype.loadViolations = async function() {
+EnvironmentalDashboard.prototype.loadViolations = async function () {
     console.log('Carregando violações...');
     const limit = document.getElementById('violations-limit')?.value || 10;
     const violationsUrl = `/api/violations?days=${this.currentPeriod}&limit=${limit}`;
@@ -28,7 +28,7 @@ EnvironmentalDashboard.prototype.loadViolations = async function() {
     }
 };
 
-EnvironmentalDashboard.prototype.updateViolationsTable = function(violations) {
+EnvironmentalDashboard.prototype.updateViolationsTable = function (violations) {
     console.log('Atualizando tabela de violações...');
     const tbody = document.getElementById('violations-table');
     if (!tbody) {
@@ -126,7 +126,7 @@ EnvironmentalDashboard.prototype.updateViolationsTable = function(violations) {
     console.log('Tabela de violações atualizada com', violations.length, 'registros');
 };
 
-EnvironmentalDashboard.prototype.filterViolations = function() {
+EnvironmentalDashboard.prototype.filterViolations = function () {
     if (!this.violations) return;
 
     const showTemp = document.getElementById('filter-temp-violations')?.checked ?? true;
