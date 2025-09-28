@@ -5,392 +5,134 @@
 
 {% block extra_head %}
 <style>
+    /* Custom CSS Variables for dark theme */
     :root {
-        --primary-gradient: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-        --secondary-gradient: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        --success-gradient: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-        --warning-gradient: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        --danger-gradient: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        --glass-bg: rgba(255, 255, 255, 0.15);
-        --glass-border: rgba(255, 255, 255, 0.3);
-        --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.15);
-        --shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.25);
-        --border-radius: 16px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --primary-bg: #0f172a;
+        --secondary-bg: #1e293b;
+        --accent-bg: #334155;
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
         --text-primary: #ffffff;
-        --text-secondary: rgba(255, 255, 255, 0.9);
-        --text-muted: rgba(255, 255, 255, 0.7);
-        --bg-overlay: rgba(0, 0, 0, 0.3);
+        --text-secondary: #e2e8f0;
+        --text-muted: #94a3b8;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #3b82f6;
     }
 
-    * {
-        box-sizing: border-box;
-    }
-
+    /* Body background with Tailwind-like gradient */
     body {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         min-height: 100vh;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         color: var(--text-primary);
-        overflow-x: hidden;
-        position: relative;
     }
 
-    body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.03)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.03)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.02)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.02)"/><circle cx="90" cy="30" r="0.5" fill="rgba(255,255,255,0.02)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-        pointer-events: none;
-        z-index: -1;
-    }
-
-    .dashboard-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    /* Header Section */
-    .dashboard-header {
-        text-align: center;
-        margin-bottom: 3rem;
-        position: relative;
-    }
-
-    .dashboard-header::before {
-        content: '';
-        position: absolute;
-        top: -50px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100px;
-        height: 100px;
+    /* Glass morphism effect */
+    .glass-card {
         background: var(--glass-bg);
-        border-radius: 50%;
-        backdrop-filter: blur(20px);
+        backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
-        opacity: 0.3;
+        border-radius: 0.75rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transition: all 0.3s ease;
     }
 
-    .header-title {
-        font-size: 3.5rem;
-        font-weight: 700;
-        background: linear-gradient(45deg, #ffffff, #e0e7ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 1rem;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    .glass-card:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-4px);
+        box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
     }
 
-    .header-subtitle {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        margin-bottom: 2rem;
-        font-weight: 300;
-        color: var(--text-secondary);
+    /* Gradient backgrounds */
+    .gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: 50px;
-        font-weight: 500;
-        box-shadow: var(--shadow-soft);
-        transition: var(--transition);
+    .gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
     }
 
-    .status-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-strong);
+    .gradient-warning {
+        background: linear-gradient(135deg, #fcb045 0%, #fd1d1d 100%);
     }
 
-    /* Controls Section */
-    .controls-section {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-bottom: 3rem;
-        box-shadow: var(--shadow-soft);
+    .gradient-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
     }
 
-    .controls-title {
-        color: var(--text-primary);
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .gradient-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
-    .period-selector {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        justify-content: center;
+    /* Custom animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .period-btn {
-        padding: 0.75rem 1.5rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        color: #ffffff;
-        font-weight: 500;
-        transition: var(--transition);
-        cursor: pointer;
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .animate-pulse-custom {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Chart containers */
+    .chart-container {
         position: relative;
-        overflow: hidden;
-    }
-
-    .period-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
+        height: 320px;
         width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
     }
 
-    .period-btn:hover::before {
-        left: 100%;
+    /* Loading states */
+    .skeleton-loader {
+        animation: pulse 1.5s infinite;
+        background: linear-gradient(90deg, #374151, #4b5563, #374151);
+        background-size: 200% 100%;
+        border-radius: 0.5rem;
     }
 
-    .period-btn.active {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.4);
-        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
     }
 
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
+    ::-webkit-scrollbar-track {
+        background: #1e293b;
     }
 
-    .action-btn {
-        padding: 0.875rem 2rem;
-        border: none;
-        border-radius: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: var(--transition);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        position: relative;
-        overflow: hidden;
+    ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 9999px;
     }
 
-    .action-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        transition: left 0.5s;
+    ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
     }
 
-    .action-btn:hover::before {
-        left: 100%;
-    }
-
-    .action-btn.primary {
-        background: var(--primary-gradient);
-        color: white;
-        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-    }
-
-    .action-btn.success {
-        background: var(--success-gradient);
-        color: white;
-        box-shadow: 0 4px 20px rgba(79, 172, 254, 0.3);
-    }
-
-    .action-btn.warning {
-        background: var(--warning-gradient);
-        color: white;
-        box-shadow: 0 4px 20px rgba(67, 233, 123, 0.3);
-    }
-
-    /* Custom Period Panel */
-    .custom-period-panel {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-top: 1rem;
-        box-shadow: var(--shadow-soft);
-        display: none;
-    }
-
-    .slider-container {
-        margin-bottom: 1.5rem;
-    }
-
-    .slider-label {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        font-weight: 600;
-        color: #ffffff;
-    }
-
-    .custom-slider {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-        height: 8px;
-        background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.4));
-        border-radius: 4px;
-        outline: none;
-        transition: var(--transition);
-    }
-
-    .custom-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 24px;
-        height: 24px;
-        background: linear-gradient(135deg, #ffffff, #e0e7ff);
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        transition: var(--transition);
-    }
-
-    .custom-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
-    }
-
-    .slider-value {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #ffffff;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Info Banner */
-    .info-banner {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-bottom: 3rem;
-        box-shadow: var(--shadow-soft);
-    }
-
-    .banner-content {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .banner-icon {
-        width: 80px;
-        height: 80px;
-        background: var(--warning-gradient);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 2rem;
-        box-shadow: 0 8px 32px rgba(67, 233, 123, 0.3);
-    }
-
-    .banner-text h5 {
-        color: #ffffff;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .banner-text p {
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 0.5rem;
-        font-size: 0.95rem;
-    }
-
-    .banner-text small {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.85rem;
-    }
-
-    /* KPI Cards */
-    .kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 2rem;
-        margin-bottom: 3rem;
-    }
-
-    .kpi-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        box-shadow: var(--shadow-soft);
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .kpi-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--primary-gradient);
-        border-radius: var(--border-radius) var(--border-radius) 0 0;
-    }
-
-    .kpi-card:hover {
-        transform: translateY(-8px);
-        box-shadow: var(--shadow-strong);
-    }
-
-    .kpi-card.temperature::before {
-        background: var(--danger-gradient);
-    }
-
-    .kpi-card.humidity::before {
-        background: var(--primary-gradient);
-    }
-
-    .kpi-card.violations::before {
-        background: var(--warning-gradient);
-    }
-
-    .kpi-card.measurements::before {
-        background: var(--success-gradient);
-    }
-
+    /* KPI Icons */
     .kpi-icon {
         width: 80px;
         height: 80px;
@@ -398,352 +140,36 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         position: relative;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
 
-    .kpi-card.temperature .kpi-icon {
-        background: var(--danger-gradient);
-    }
-
-    .kpi-card.humidity .kpi-icon {
-        background: var(--primary-gradient);
-    }
-
-    .kpi-card.violations .kpi-icon {
-        background: var(--warning-gradient);
-    }
-
-    .kpi-card.measurements .kpi-icon {
-        background: var(--success-gradient);
-    }
-
-    .kpi-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .kpi-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .kpi-subtitle {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-    }
-
-    /* Charts Section */
-    .charts-section {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-        gap: 2rem;
-        margin-bottom: 3rem;
-    }
-
-    .chart-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        box-shadow: var(--shadow-soft);
-    }
-
-    .chart-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .chart-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-
-    .chart-card.temperature .chart-icon {
-        background: var(--danger-gradient);
-    }
-
-    .chart-card.humidity .chart-icon {
-        background: var(--primary-gradient);
-    }
-
-    .chart-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .chart-subtitle {
-        color: var(--text-muted);
-        margin: 0;
-        font-size: 0.9rem;
-    }
-
-    .chart-container {
-        position: relative;
-        height: 400px;
-        margin-top: 1rem;
-    }
-
-    /* Violations Section */
-    .violations-section {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        box-shadow: var(--shadow-soft);
-    }
-
-    .violations-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .violations-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #ffffff;
-        margin: 0;
-        display: flex;
+    /* Status badge */
+    .status-badge {
+        display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-    }
-
-    .filters-section {
-        display: flex;
-        gap: 2rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .filter-group {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .filter-label {
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-
-    .filter-checkbox {
-        margin-right: 0.5rem;
-    }
-
-    .limit-selector {
-        padding: 0.5rem 1rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        color: #ffffff;
-        font-weight: 500;
-    }
-
-    /* AI Section */
-    .ai-section {
+        padding: 0.75rem 1.5rem;
         background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-top: 3rem;
-        box-shadow: var(--shadow-soft);
-    }
-
-    .ai-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .ai-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .ai-subtitle {
-        color: var(--text-muted);
-        font-size: 1.1rem;
-    }
-
-    .ai-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-    }
-
-    .ai-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 2rem;
-        text-align: center;
-        transition: var(--transition);
-    }
-
-    .ai-card:hover {
-        transform: translateY(-4px);
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-    .ai-icon {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        font-size: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    }
-
-    .ai-card.anomalies .ai-icon {
-        background: var(--warning-gradient);
-    }
-
-    .ai-card.predictions .ai-icon {
-        background: var(--primary-gradient);
-    }
-
-    .ai-card.patterns .ai-icon {
-        background: var(--success-gradient);
-    }
-
-    .ai-card-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-    }
-
-    /* Loading States */
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
         backdrop-filter: blur(10px);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        color: #ffffff;
-    }
-
-    .loading-overlay.hidden {
-        display: none;
-    }
-
-    .loading-spinner {
-        width: 60px;
-        height: 60px;
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-top: 4px solid #ffffff;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-    .skeleton {
-        background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.5s infinite;
-        border-radius: 8px;
-    }
-
-    @keyframes skeleton-loading {
-        0% {
-            background-position: 200% 0;
-        }
-
-        100% {
-            background-position: -200% 0;
-        }
-    }
-
-    .skeleton-icon {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        margin-bottom: 1rem;
-    }
-
-    .skeleton-title {
-        height: 16px;
-        width: 70%;
-        margin-bottom: 0.5rem;
-    }
-
-    .skeleton-value {
-        height: 32px;
-        width: 80%;
-        margin-bottom: 0.5rem;
-    }
-
-    .skeleton-subtitle {
-        height: 14px;
-        width: 60%;
-    }
-
-    /* Toast Notifications */
-    .toast-container {
-        z-index: 10000;
-    }
-
-    .toast {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
         border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-strong);
+        border-radius: 2rem;
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
     }
 
-    /* Responsive Design */
+    .status-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Responsive adjustments */
     @media (max-width: 768px) {
         .dashboard-container {
-            padding: 1rem;
-        }
-
-        .header-title {
-            font-size: 2.5rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
         }
 
         .kpi-grid {
@@ -753,51 +179,6 @@
 
         .charts-section {
             grid-template-columns: 1fr;
-        }
-
-        .period-selector {
-            justify-content: center;
-        }
-
-        .action-buttons {
-            justify-content: center;
-        }
-
-        .filters-section {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 1rem;
-        }
-
-        .violations-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .header-title {
-            font-size: 2rem;
-        }
-
-        .banner-content {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .controls-section,
-        .info-banner,
-        .kpi-card,
-        .chart-card,
-        .violations-section,
-        .ai-section {
-            padding: 1.5rem;
-        }
-
-        .period-btn,
-        .action-btn {
-            padding: 0.625rem 1.25rem;
-            font-size: 0.9rem;
         }
     }
 </style>
@@ -838,67 +219,86 @@
     </div>
 
     <!-- Header Section -->
-    <header class="dashboard-header">
-        <h1 class="header-title">Dashboard Ambiental</h1>
-        <p class="header-subtitle">Sistema avançado de monitoramento de condições ambientais</p>
-        <div class="status-badge">
-            <i class="fas fa-circle text-success"></i>
+    <header class="text-center mb-12 animate-fade-in-up">
+        <h1 class="text-5xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-4">
+            Dashboard Ambiental
+        </h1>
+        <p class="text-xl text-slate-300 mb-8">Sistema avançado de monitoramento de condições ambientais</p>
+        <div class="status-badge mx-auto">
+            <i class="fas fa-circle text-green-400"></i>
             <span>Sistema Online</span>
-            <small id="last-updated" class="ms-2">Atualizado às --:--</small>
+            <small class="ms-2 text-slate-400" id="last-updated">Atualizado às --:--</small>
         </div>
     </header>
 
     <!-- Controls Section -->
-    <section class="controls-section">
-        <h3 class="controls-title">
-            <i class="fas fa-sliders-h"></i>
+    <section class="glass-card p-8 mb-12 animate-fade-in-up">
+        <h3 class="text-2xl font-semibold mb-6 flex items-center gap-3">
+            <i class="fas fa-sliders-h text-blue-400"></i>
             Controles do Sistema
         </h3>
 
         <!-- Period Selector -->
-        <div class="period-selector">
+        <div class="flex flex-wrap justify-center gap-4 mb-8">
             <input type="radio" class="btn-check" name="period" id="period-1" value="1" autocomplete="off">
-            <label class="period-btn" for="period-1">1 dia</label>
+            <label
+                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
+                for="period-1">1 dia</label>
 
             <input type="radio" class="btn-check" name="period" id="period-7" value="7" autocomplete="off">
-            <label class="period-btn" for="period-7">7 dias</label>
+            <label
+                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
+                for="period-7">7 dias</label>
 
             <input type="radio" class="btn-check" name="period" id="period-30" value="30" autocomplete="off" checked>
-            <label class="period-btn active" for="period-30">30 dias</label>
+            <label
+                class="px-6 py-3 bg-white/20 border border-white/40 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer shadow-lg"
+                for="period-30">30 dias</label>
 
             <input type="radio" class="btn-check" name="period" id="period-90" value="90" autocomplete="off">
-            <label class="period-btn" for="period-90">90 dias</label>
+            <label
+                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
+                for="period-90">90 dias</label>
 
             <input type="radio" class="btn-check" name="period" id="period-custom" value="custom" autocomplete="off">
-            <label class="period-btn" for="period-custom">
-                <i class="fas fa-calendar-plus me-1"></i>Personalizado
+            <label
+                class="px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30"
+                for="period-custom">
+                <i class="fas fa-calendar-plus me-2"></i>Personalizado
             </label>
         </div>
 
         <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button type="button" class="action-btn primary" id="force-cycle-btn">
+        <div class="flex flex-wrap justify-center gap-4">
+            <button type="button"
+                class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg transition-all duration-300 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl hover:scale-105 flex items-center gap-2">
                 <i class="fas fa-play-circle"></i>
                 Forçar Ciclo
             </button>
 
             <div class="dropdown">
-                <button type="button" class="action-btn success dropdown-toggle" data-bs-toggle="dropdown">
+                <button type="button"
+                    class="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded-lg transition-all duration-300 hover:from-green-600 hover:to-teal-700 hover:shadow-xl hover:scale-105 dropdown-toggle flex items-center gap-2"
+                    data-bs-toggle="dropdown">
                     <i class="fas fa-file-export"></i>
                     Relatórios
                 </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#" onclick="downloadReport('pdf', 30); return false;">
-                            <i class="fas fa-file-pdf text-danger me-2"></i>PDF (30 dias)</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="downloadReport('excel', 30); return false;">
-                            <i class="fas fa-file-excel text-success me-2"></i>Excel (30 dias)</a></li>
+                <ul class="dropdown-menu bg-slate-800 border-slate-600">
+                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
+                            onclick="downloadReport('pdf', 30); return false;">
+                            <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (30 dias)</button></li>
+                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
+                            onclick="downloadReport('excel', 30); return false;">
+                            <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (30 dias)</button></li>
                     <li>
-                        <hr class="dropdown-divider">
+                        <hr class="dropdown-divider border-slate-600">
                     </li>
-                    <li><a class="dropdown-item" href="#" onclick="downloadReport('pdf', 90); return false;">
-                            <i class="fas fa-file-pdf text-danger me-2"></i>PDF (90 dias)</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="downloadReport('excel', 90); return false;">
-                            <i class="fas fa-file-excel text-success me-2"></i>Excel (90 dias)</a></li>
+                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
+                            onclick="downloadReport('pdf', 90); return false;">
+                            <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (90 dias)</button></li>
+                    <li><button class="dropdown-item text-slate-300 hover:bg-slate-700"
+                            onclick="downloadReport('excel', 90); return false;">
+                            <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (90 dias)</button></li>
                 </ul>
             </div>
         </div>
@@ -940,129 +340,117 @@
     </section>
 
     <!-- KPI Cards -->
-    <section class="kpi-grid">
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <!-- Temperature -->
-        <div class="kpi-card temperature">
-            <div class="kpi-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+        <div class="glass-card p-6 animate-fade-in-up">
+            <div class="kpi-icon gradient-danger mx-auto">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
                     <path
                         d="M12 2C13.1 2 14 2.9 14 4V5H16V7H14V8C14 9.1 13.1 10 12 10S10 9.1 10 8V7H8V5H10V4C10 2.9 10.9 2 12 2M7 11H17V21C17 22.1 16.1 23 15 23H9C7.9 23 7 22.1 7 21V11Z" />
                 </svg>
             </div>
-            <div class="skeleton-loader" id="temp-skeleton">
-                <div class="skeleton skeleton-icon mx-auto"></div>
-                <div class="skeleton skeleton-title"></div>
-                <div class="skeleton skeleton-value"></div>
-                <div class="skeleton skeleton-subtitle"></div>
-            </div>
-            <div class="kpi-content" id="temp-content" style="display: none;">
-                <div class="kpi-title">Temperatura Média</div>
-                <div class="kpi-value" id="temp-mean">--</div>
-                <div class="kpi-subtitle" id="temp-range">Min: -- | Max: --</div>
+            <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="temp-skeleton"></div>
+            <div class="text-center" id="temp-content" style="display: none;">
+                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Temperatura Média</div>
+                <div class="text-3xl font-bold text-white mb-2" id="temp-mean">--</div>
+                <div class="text-sm text-slate-400" id="temp-range">Min: -- | Max: --</div>
             </div>
         </div>
 
         <!-- Humidity -->
-        <div class="kpi-card humidity">
-            <div class="kpi-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+        <div class="glass-card p-6 animate-fade-in-up">
+            <div class="kpi-icon gradient-info mx-auto">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
                     <path
                         d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
                 </svg>
             </div>
-            <div class="skeleton-loader" id="humidity-skeleton">
-                <div class="skeleton skeleton-icon mx-auto"></div>
-                <div class="skeleton skeleton-title"></div>
-                <div class="skeleton skeleton-value"></div>
-                <div class="skeleton skeleton-subtitle"></div>
-            </div>
-            <div class="kpi-content" id="humidity-content" style="display: none;">
-                <div class="kpi-title">Umidade Média</div>
-                <div class="kpi-value" id="rh-mean">--</div>
-                <div class="kpi-subtitle" id="rh-range">Min: -- | Max: --</div>
+            <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="humidity-skeleton"></div>
+            <div class="text-center" id="humidity-content" style="display: none;">
+                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Umidade Média</div>
+                <div class="text-3xl font-bold text-white mb-2" id="rh-mean">--</div>
+                <div class="text-sm text-slate-400" id="rh-range">Min: -- | Max: --</div>
             </div>
         </div>
 
         <!-- Violations -->
-        <div class="kpi-card violations">
-            <div class="kpi-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+        <div class="glass-card p-6 animate-fade-in-up">
+            <div class="kpi-icon gradient-warning mx-auto">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
                     <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" />
                 </svg>
             </div>
-            <div class="skeleton-loader" id="violations-skeleton">
-                <div class="skeleton skeleton-icon mx-auto"></div>
-                <div class="skeleton skeleton-title"></div>
-                <div class="skeleton skeleton-value"></div>
-                <div class="skeleton skeleton-subtitle"></div>
-            </div>
-            <div class="kpi-content" id="violations-content" style="display: none;">
-                <div class="kpi-title">Total de Violações</div>
-                <div class="kpi-value" id="violations-count">--</div>
-                <div class="kpi-subtitle" id="violations-pct">-- do total</div>
-                <div class="kpi-subtitle" id="violations-base">Base: -- medições</div>
+            <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="violations-skeleton"></div>
+            <div class="text-center" id="violations-content" style="display: none;">
+                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Total de Violações</div>
+                <div class="text-3xl font-bold text-white mb-2" id="violations-count">--</div>
+                <div class="text-sm text-slate-400" id="violations-pct">-- do total</div>
+                <div class="text-sm text-slate-400" id="violations-base">Base: -- medições</div>
             </div>
         </div>
 
         <!-- Measurements -->
-        <div class="kpi-card measurements">
-            <div class="kpi-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+        <div class="glass-card p-6 animate-fade-in-up">
+            <div class="kpi-icon gradient-success mx-auto">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-white">
                     <path
                         d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
                 </svg>
             </div>
-            <div class="skeleton-loader" id="measurements-skeleton">
-                <div class="skeleton skeleton-icon mx-auto"></div>
-                <div class="skeleton skeleton-title"></div>
-                <div class="skeleton skeleton-value"></div>
-                <div class="skeleton skeleton-subtitle"></div>
-            </div>
-            <div class="kpi-content" id="measurements-content" style="display: none;">
-                <div class="kpi-title">Total de Medições</div>
-                <div class="kpi-value" id="total-measurements">--</div>
-                <div class="kpi-subtitle">registros no período</div>
+            <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="measurements-skeleton"></div>
+            <div class="text-center" id="measurements-content" style="display: none;">
+                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Total de Medições</div>
+                <div class="text-3xl font-bold text-white mb-2" id="total-measurements">--</div>
+                <div class="text-sm text-slate-400">registros no período</div>
             </div>
         </div>
     </section>
 
     <!-- Charts Section -->
-    <section class="charts-section">
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
         <!-- Temperature Chart -->
-        <div class="chart-card temperature">
-            <div class="chart-header">
-                <div class="chart-icon">
-                    <i class="fas fa-thermometer-half"></i>
-                </div>
-                <div>
-                    <h3 class="chart-title">Temperatura</h3>
-                    <p class="chart-subtitle">Variação térmica ao longo do tempo</p>
+        <div class="glass-card p-6 animate-fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <svg class="w-6 h-6 mr-3 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C13.1 2 14 2.9 14 4V5H16V7H14V8C14 9.1 13.1 10 12 10S10 9.1 10 8V7H8V5H10V4C10 2.9 10.9 2 12 2M7 11H17V21C17 22.1 16.1 23 15 23H9C7.9 23 7 22.1 7 21V11Z" />
+                    </svg>
+                    Temperatura ao Longo do Tempo
+                </h3>
+                <div class="flex space-x-2">
+                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('temp')">Linha</button>
+                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('temp')">Barra</button>
                 </div>
             </div>
             <div class="chart-container">
                 <div class="text-center py-5" id="temp-chart-placeholder">
                     <div class="loading-spinner"></div>
-                    <p class="mt-3" style="color: rgba(255,255,255,0.7);">Carregando gráfico...</p>
+                    <p class="mt-3 text-slate-300">Carregando gráfico...</p>
                 </div>
                 <canvas id="tempChart" style="display: none;"></canvas>
             </div>
         </div>
 
         <!-- Humidity Chart -->
-        <div class="chart-card humidity">
-            <div class="chart-header">
-                <div class="chart-icon">
-                    <i class="fas fa-tint"></i>
-                </div>
-                <div>
-                    <h3 class="chart-title">Umidade Relativa</h3>
-                    <p class="chart-subtitle">Níveis de umidade ao longo do tempo</p>
+        <div class="glass-card p-6 animate-fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <svg class="w-6 h-6 mr-3 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
+                    </svg>
+                    Umidade ao Longo do Tempo
+                </h3>
+                <div class="flex space-x-2">
+                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('humidity')">Linha</button>
+                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('humidity')">Barra</button>
                 </div>
             </div>
             <div class="chart-container">
                 <div class="text-center py-5" id="rh-chart-placeholder">
                     <div class="loading-spinner"></div>
-                    <p class="mt-3" style="color: rgba(255,255,255,0.7);">Carregando gráfico...</p>
+                    <p class="mt-3 text-slate-300">Carregando gráfico...</p>
                 </div>
                 <canvas id="rhChart" style="display: none;"></canvas>
             </div>
@@ -1070,62 +458,62 @@
     </section>
 
     <!-- Violations Section -->
-    <section class="violations-section">
-        <div class="violations-header">
-            <h3 class="violations-title">
-                <i class="fas fa-exclamation-triangle"></i>
+    <section class="glass-card p-6 mb-12 animate-fade-in-up">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+            <h3 class="text-xl font-bold text-white flex items-center mb-4 lg:mb-0">
+                <svg class="w-6 h-6 mr-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" />
+                </svg>
                 Últimas Violações
             </h3>
 
-            <div class="filters-section">
-                <div class="filter-group">
-                    <span class="filter-label">Filtrar por:</span>
-                    <div class="form-check">
-                        <input class="form-check-input filter-checkbox" type="checkbox" id="filter-temp-violations"
-                            checked>
-                        <label class="form-check-label" for="filter-temp-violations"
-                            style="color: rgba(255,255,255,0.8);">
-                            Temperatura
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-medium text-slate-300">Filtrar por:</span>
+                    <div class="flex gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="form-check-input filter-checkbox" id="filter-temp-violations"
+                                checked>
+                            <span class="text-sm text-slate-300">Temperatura</span>
                         </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input filter-checkbox" type="checkbox" id="filter-humidity-violations"
-                            checked>
-                        <label class="form-check-label" for="filter-humidity-violations"
-                            style="color: rgba(255,255,255,0.8);">
-                            Umidade
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="form-check-input filter-checkbox"
+                                id="filter-humidity-violations" checked>
+                            <span class="text-sm text-slate-300">Umidade</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="filter-group">
-                    <span class="filter-label">Mostrar:</span>
-                    <select class="limit-selector" id="violations-limit">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium text-slate-300">Mostrar:</span>
+                    <select
+                        class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="violations-limit">
                         <option value="10" selected>10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
-                    <span style="color: rgba(255,255,255,0.7);">violações</span>
+                    <span class="text-sm text-slate-400">violações</span>
                 </div>
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-hover">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
                 <thead>
-                    <tr>
-                        <th style="color: var(--text-secondary); border-color: rgba(255,255,255,0.1);">Data/Hora</th>
-                        <th style="color: var(--text-secondary); border-color: rgba(255,255,255,0.1);">Temperatura</th>
-                        <th style="color: var(--text-secondary); border-color: rgba(255,255,255,0.1);">Umidade</th>
-                        <th style="color: var(--text-secondary); border-color: rgba(255,255,255,0.1);">Motivo</th>
+                    <tr class="border-b border-slate-600">
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Data/Hora</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Temperatura</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Umidade</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-300">Motivo</th>
                     </tr>
                 </thead>
-                <tbody id="violations-table" style="color: var(--text-secondary);">
+                <tbody id="violations-table" class="text-slate-300">
                     <tr>
-                        <td colspan="4" class="text-center py-4" style="color: rgba(255,255,255,0.6);">
-                            <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 1rem;"></div>
-                            Carregando violações...
+                        <td colspan="4" class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-3"></div>
+                            <p class="text-slate-400">Carregando violações...</p>
                         </td>
                     </tr>
                 </tbody>
@@ -1134,54 +522,68 @@
     </section>
 
     <!-- AI Section -->
-    <section class="ai-section">
-        <div class="ai-header">
-            <h2 class="ai-title">
-                <i class="fas fa-brain me-2"></i>
+    <section class="mb-12 animate-fade-in-up">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-white mb-3 flex items-center justify-center">
+                <svg class="w-8 h-8 mr-3 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V8H13V6H11M11,10V18H13V10H11Z" />
+                </svg>
                 Inteligência Artificial
             </h2>
-            <p class="ai-subtitle">Análise avançada e previsões automatizadas</p>
+            <p class="text-lg text-slate-300">Análise avançada e previsões automatizadas</p>
         </div>
 
-        <div class="ai-grid">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Anomalies -->
-            <div class="ai-card anomalies">
-                <div class="ai-icon">
-                    <i class="fas fa-exclamation-circle"></i>
+            <div class="glass-card p-6 text-center">
+                <div
+                    class="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" />
+                    </svg>
                 </div>
-                <h4 class="ai-card-title">Detecção de Anomalias</h4>
+                <h4 class="text-lg font-semibold text-white mb-4">Detecção de Anomalias</h4>
                 <div id="ai-anomalies-content">
                     <div class="text-center py-4">
-                        <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
-                        <p style="color: rgba(255,255,255,0.7); margin: 0;">Analisando padrões...</p>
+                        <div class="loading-spinner mx-auto mb-3"></div>
+                        <p class="text-slate-400">Analisando padrões...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Predictions -->
-            <div class="ai-card predictions">
-                <div class="ai-icon">
-                    <i class="fas fa-chart-line"></i>
+            <div class="glass-card p-6 text-center">
+                <div
+                    class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M16,4L9,8.04V12.54L16,16.5V12.5L9,8.5V8.04L16,4M16,3C16.55,3 17,3.45 17,4V5L9,9V10L2,6V5C2,3.89 2.89,3 4,3H16M2,7L9,11V12.5L2,8.5V7M16,13.5L9,9.5V10L16,14V13.5M16,21C16.55,21 17,21.45 17,22V23H9V22C9,21.45 9.45,21 10,21H16Z" />
+                    </svg>
                 </div>
-                <h4 class="ai-card-title">Previsões</h4>
+                <h4 class="text-lg font-semibold text-white mb-4">Previsões</h4>
                 <div id="ai-predictions-content">
                     <div class="text-center py-4">
-                        <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
-                        <p style="color: rgba(255,255,255,0.7); margin: 0;">Calculando tendências...</p>
+                        <div class="loading-spinner mx-auto mb-3"></div>
+                        <p class="text-slate-400">Calculando tendências...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Patterns -->
-            <div class="ai-card patterns">
-                <div class="ai-icon">
-                    <i class="fas fa-search"></i>
+            <div class="glass-card p-6 text-center">
+                <div
+                    class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
+                    </svg>
                 </div>
-                <h4 class="ai-card-title">Análise de Padrões</h4>
+                <h4 class="text-lg font-semibold text-white mb-4">Análise de Padrões</h4>
                 <div id="ai-patterns-content">
                     <div class="text-center py-4">
-                        <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
-                        <p style="color: rgba(255,255,255,0.7); margin: 0;">Identificando correlações...</p>
+                        <div class="loading-spinner mx-auto mb-3"></div>
+                        <p class="text-slate-400">Identificando correlações...</p>
                     </div>
                 </div>
             </div>
