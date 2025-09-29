@@ -67,7 +67,8 @@ def get_filtered_queryset(request):
             # Ignora os parâmetros se forem inválidos
             pass
     
-    # Retorna o queryset original se nenhum filtro válido foi aplicado
+    # IMPORTANTE: Retorna todos os registros se nenhum filtro específico foi aplicado
+    # Isso permite que a API funcione corretamente com dados de demonstração
     return qs
 
 # --- Views da API ---

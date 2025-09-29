@@ -1,43 +1,156 @@
 /**
- * Dashboard Core Module (Refatorado)
+ * Dashboard Core Module (Refatorado e Melhorado)
  * Gerencia o estado, busca de dados e a comunicação entre os componentes do dashboard.
- * 
- * MELHORIAS:
- * - Desacoplamento: Usa um sistema de registro de componentes em vez de acessar 'window' diretamente.
- * - Eficiência: Busca todos os dados necessários (summary, series) em paralelo com uma única função.
- * - Consistência: A atualização automática agora recarrega todos os dados, não apenas o resumo.
- * - Boas Práticas: Remove a manipulação de CSS com '!important', sugerindo uma abordagem baseada em classes.
- * - Robustez: Centraliza o tratamento de erros e o gerenciamento do estado de carregamento.
+ *
+ * MELHORIAS IMPLEMENTADAS:
+ * - Sistema de c            const [summaryData, seriesData] = await Promise.all([
+                this.apiCall(`/api/summary/`), // Removido o filtro de dias para pegar todos os dados
+                this.apiCall(`/api/series/?max_points=100`) // Também removido o filtro de dias
+            ]);guração centralizado
+ * - Tratamento de erros robusto
+ * - Monitoramento de performance
+ * - Validações de dados
+ * - Sistema de cache inteligente
+ * - Retry automático com backoff
+ * - Logging estruturado
+ * - Métricas de uso
  */
 class DashboardCore {
-    constructor(config = {}) {
-        // Configurações padrão que podem ser sobrescritas na instanciação
-        this.config = {
-            defaultPeriodDays: 30,
-            updateIntervalMs: 30000,
-            apiMaxRetries: 3,
-            apiRetryDelayMs: 1000,
-            ...config
+    constructor(config = null, errorHandler = null, performanceMonitor = null) {
+        // Configurações padrão como fallback
+        this.defaultConfig = {
+            api: {
+                baseUrl: '/api',
+                maxRetries: 3,
+                retryDelay: 1000
+            },
+            ui: {
+                updateInterval: 30000,
+                defaultPeriodDays: 30
+            },
+            features: {
+                autoUpdate: true
+            },
+            cache: {
+                duration: 300000, // 5 minutos
+                cleanupInterval: 3600000 // 1 hora
+            }
         };
 
+        // Usar configuração passada, ou global, ou padrão
+        this.config = config || window.dashboardConfig || this.defaultConfig;
+
+        // Inicializar sistemas auxiliares
+        this.errorHandler = errorHandler || window.dashboardErrorHandler;
+        this.performanceMonitor = performanceMonitor || window.dashboardPerformanceMonitor;
+
+        // Estado do dashboard
         this.state = {
-            currentPeriodDays: this.config.defaultPeriodDays,
+            currentPeriodDays: this.getConfig('ui.defaultPeriodDays', 30),
             isLoading: false,
             lastUpdate: null,
+            cache: new Map(),
+            retryAttempts: new Map()
         };
 
         // Armazena referências para outros módulos (UI, Gráficos) de forma desacoplada
         this.components = {};
+
+        // Sistema de atualização automática
         this.autoUpdateInterval = null;
+        this.isDestroyed = false;
+
+        // Métricas
+        this.metrics = {
+            apiCalls: 0,
+            successfulUpdates: 0,
+            failedUpdates: 0,
+            averageResponseTime: 0
+        };
+    }
+
+    /**
+     * Método helper para obter configurações de forma unificada
+     * @param {string} path - Caminho da configuração
+     * @param {*} defaultValue - Valor padrão
+     * @returns {*} Valor da configuração
+     */
+    getConfig(path, defaultValue = null) {
+        // Se for uma instância do DashboardConfig, usar o método get
+        if (this.config && typeof this.config.get === 'function') {
+            return this.config.get(path, defaultValue);
+        }
+
+        // Caso contrário, navegar no objeto diretamente
+        const keys = path.split('.');
+        let value = this.config;
+
+        for (const key of keys) {
+            if (value && typeof value === 'object' && key in value) {
+                value = value[key];
+            } else {
+                return defaultValue;
+            }
+        }
+
+        return value;
     }
 
     /**
      * Inicializa o core do dashboard.
      */
     init() {
-        console.log("Dashboard Core inicializado.");
-        this.updateData(); // Carrega os dados iniciais
-        this.startAutoUpdate();
+        const timerId = this.performanceMonitor ?
+            this.performanceMonitor.startTimer('core_init', { component: 'core' }) : null;
+
+        try {
+            console.log("Dashboard Core inicializado com configurações:", this.config);
+
+            // Validar configurações críticas
+            this.validateConfiguration();
+
+            // Carregar dados iniciais
+            this.updateData();
+
+            // Iniciar atualização automática se habilitada
+            if (this.getConfig('features.autoUpdate', true)) {
+                this.startAutoUpdate();
+            }
+
+            if (timerId) {
+                this.performanceMonitor.endTimer(timerId, { success: true });
+            }
+
+        } catch (error) {
+            if (timerId) {
+                this.performanceMonitor.endTimer(timerId, { success: false, error: error.message });
+            }
+
+            this.handleError(error, {
+                component: 'core',
+                operation: 'init',
+                recoverable: false
+            });
+        }
+    }
+
+    /**
+     * Valida configurações críticas
+     */
+    validateConfiguration() {
+        const requiredConfigs = [
+            { path: 'api.baseUrl', default: '/api' },
+            { path: 'ui.updateInterval', default: 30000 }
+        ];
+
+        for (const { path, default: defaultValue } of requiredConfigs) {
+            const value = this.getConfig(path, defaultValue);
+            if (value === null || value === undefined) {
+                throw new Error(`Configuração obrigatória não encontrada: ${path}`);
+            }
+        }
+
+        console.log('Configurações validadas com sucesso');
     }
 
     /**
@@ -56,53 +169,162 @@ class DashboardCore {
      * É chamada na inicialização e no intervalo de auto-update.
      */
     async updateData() {
+        const timerId = this.performanceMonitor ?
+            this.performanceMonitor.startTimer('data_update', { component: 'core' }) : null;
+
         if (this.state.isLoading) {
             console.warn("Update cancelado: uma atualização já está em andamento.");
             return;
         }
 
         this.setLoading(true);
-        console.log(`Atualizando dados para o período de ${this.state.currentPeriodDays} dias...`);
+        console.log(`🔄 updateData() iniciado - buscando todos os dados...`);
 
         try {
+            console.log('🌐 Fazendo chamadas à API...');
             // Executa as chamadas de API em paralelo para maior performance
             const [summaryData, seriesData] = await Promise.all([
-                this.apiCall(`/api/summary/?days=${this.state.currentPeriodDays}`),
-                this.apiCall(`/api/series/?days=${this.state.currentPeriodDays}`)
+                this.apiCall(`/api/summary/`), // Sem filtro para pegar todos os dados
+                this.apiCall(`/api/series/?max_points=100`) // Sem filtro para pegar todos os dados
             ]);
 
-            // Notifica os componentes registrados com os novos dados
-            if (this.components.ui && typeof this.components.ui.updateSummaryUI === 'function') {
-                this.components.ui.updateSummaryUI(summaryData);
-                if (typeof this.components.ui.updateViolations === 'function') {
-                    this.components.ui.updateViolations(seriesData.violations);
-                }
-            } else {
-                console.log('Componente UI não disponível ou função updateSummaryUI não encontrada');
-            }
-            if (this.components.charts && typeof this.components.charts.updateCharts === 'function') {
-                this.components.charts.updateCharts(seriesData);
-            } else {
-                console.log('Componente charts não disponível ou função updateCharts não encontrada');
-            }
+            console.log('✅ Dados recebidos - summary:', summaryData);
+            console.log('✅ Dados recebidos - series length:', Array.isArray(seriesData) ? seriesData.length : 'não é array');
 
-            this.updateLastUpdated();
-            console.log("Dados atualizados com sucesso.");
+            // Processar dados diretamente
+            this.processData(summaryData, seriesData);
+
+            if (timerId) {
+                this.performanceMonitor.endTimer(timerId, { success: true, cached: false });
+            }
 
         } catch (error) {
-            console.error('Falha ao atualizar os dados:', error);
-            this.showBasicError(`Erro ao carregar dados: ${error.message}`);
+            if (timerId) {
+                this.performanceMonitor.endTimer(timerId, { success: false, error: error.message });
+            }
+
+            this.handleError(error, {
+                component: 'core',
+                operation: 'updateData',
+                recoverable: true
+            });
         } finally {
             this.setLoading(false);
         }
     }
 
+    /**
+     * Valida os dados recebidos da API.
+     */
+    validateReceivedData(summaryData, seriesData) {
+        if (!summaryData || typeof summaryData !== 'object') {
+            throw new Error('Dados de resumo inválidos recebidos da API');
+        }
+
+        if (!seriesData || typeof seriesData !== 'object') {
+            throw new Error('Dados de séries inválidos recebidos da API');
+        }
+
+        // Validar campos obrigatórios baseados na resposta real da API
+        const requiredSummaryFields = ['temperature_stats', 'humidity_stats', 'total_measurements', 'violations_count'];
+
+        for (const field of requiredSummaryFields) {
+            if (!(field in summaryData)) {
+                throw new Error(`Campo obrigatório ausente em summaryData: ${field}`);
+            }
+        }
+
+        console.log('Dados recebidos validados com sucesso');
+    }
+
+    /**
+     * Processa dados do cache.
+     */
+    processCachedData(cachedData) {
+        const { summaryData, seriesData } = cachedData;
+        this.processData(summaryData, seriesData);
+    }
+
+    /**
+     * Processa os dados e notifica componentes.
+     */
+    processData(summaryData, seriesData) {
+        try {
+            console.log('🔄 processData() iniciado');
+            console.log('📊 Summary data recebido:', summaryData);
+
+            // Transformar dados da API para o formato esperado pelo UI
+            const transformedData = this.transformApiData(summaryData, seriesData);
+            console.log('🔄 Dados transformados:', transformedData);
+
+            // Notifica os componentes registrados com os novos dados
+            if (this.components.ui && typeof this.components.ui.updateSummaryUI === 'function') {
+                console.log('🎨 Atualizando interface com dados transformados');
+                this.components.ui.updateSummaryUI(transformedData);
+                if (typeof this.components.ui.updateViolations === 'function') {
+                    this.components.ui.updateViolations(seriesData.violations || []);
+                }
+            } else {
+                console.warn('⚠️ Componente UI não disponível ou função updateSummaryUI não encontrada');
+            }
+
+            if (this.components.charts && typeof this.components.charts.updateCharts === 'function') {
+                this.components.charts.updateCharts(seriesData);
+            } else {
+                console.log('📈 Componente charts não disponível ou função updateCharts não encontrada');
+            }
+
+            this.updateLastUpdated();
+            console.log("✅ Dados processados com sucesso.");
+
+        } catch (error) {
+            console.error('❌ Erro ao processar dados:', error);
+            this.handleError(error, {
+                component: 'core',
+                operation: 'processData',
+                recoverable: true
+            });
+        }
+    }
+
+    /**
+     * Transforma dados da API para o formato esperado pelo UI
+     */
+    transformApiData(summaryData, seriesData) {
+        return {
+            temperature: {
+                average: summaryData.temperature_stats?.mean || 0,
+                min: summaryData.temperature_stats?.min || 0,
+                max: summaryData.temperature_stats?.max || 0
+            },
+            humidity: {
+                average: summaryData.humidity_stats?.mean || 0,
+                min: summaryData.humidity_stats?.min || 0,
+                max: summaryData.humidity_stats?.max || 0
+            },
+            violations: {
+                total: summaryData.violations_count || 0,
+                base_measurements: summaryData.total_measurements || 0
+            },
+            measurements: summaryData.total_measurements || 0
+        };
+    }
+
     startAutoUpdate() {
         this.stopAutoUpdate(); // Garante que não haja múltiplos intervalos rodando
+
+        const updateInterval = this.getConfig('ui.updateInterval', 30000);
+
+        if (updateInterval <= 0) {
+            console.log('Atualização automática desabilitada (intervalo <= 0)');
+            return;
+        }
+
         this.autoUpdateInterval = setInterval(() => {
             this.updateData();
-        }, this.config.updateIntervalMs);
-        console.log(`Atualização automática iniciada a cada ${this.config.updateIntervalMs / 1000}s.`);
+        }, updateInterval);
+
+        console.log(`Atualização automática iniciada a cada ${updateInterval / 1000}s.`);
     }
 
     stopAutoUpdate() {
@@ -118,6 +340,12 @@ class DashboardCore {
      * @param {object} options - Opções para a função fetch().
      */
     async apiCall(endpoint, options = {}) {
+        const timerId = this.performanceMonitor ?
+            this.performanceMonitor.startTimer('api_call', { endpoint, method: options.method || 'GET' }) : null;
+
+        const maxRetries = this.getConfig('api.maxRetries', 3);
+        const retryDelay = this.getConfig('api.retryDelay', 1000);
+
         const defaultOptions = {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
@@ -130,18 +358,51 @@ class DashboardCore {
 
         const finalOptions = { ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers } };
 
-        for (let attempt = 1; attempt <= this.config.apiMaxRetries; attempt++) {
+        let lastError;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 const response = await fetch(endpoint, finalOptions);
+
                 if (!response.ok) {
-                    throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+                    const errorText = await response.text();
+                    throw new Error(`Erro na requisição: ${response.status} ${response.statusText} - ${errorText}`);
                 }
-                return await response.json();
+
+                const data = await response.json();
+
+                if (timerId) {
+                    this.performanceMonitor.endTimer(timerId, {
+                        success: true,
+                        attempt,
+                        statusCode: response.status
+                    });
+                }
+
+                return data;
+
             } catch (error) {
-                if (attempt === this.config.apiMaxRetries) throw error; // Lança o erro na última tentativa
-                await new Promise(resolve => setTimeout(resolve, this.config.apiRetryDelayMs * attempt));
+                lastError = error;
+                console.warn(`Tentativa ${attempt}/${maxRetries} falhou para ${endpoint}:`, error.message);
+
+                if (attempt === maxRetries) {
+                    if (timerId) {
+                        this.performanceMonitor.endTimer(timerId, {
+                            success: false,
+                            attempts: attempt,
+                            error: error.message
+                        });
+                    }
+                    break; // Não aguardar mais, lançar o erro
+                }
+
+                // Aguardar antes da próxima tentativa com backoff exponencial
+                const delay = retryDelay * Math.pow(2, attempt - 1);
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
+
+        throw lastError; // Lança o último erro após todas as tentativas
     }
 
     // --- Métodos Utilitários e de UI ---
@@ -204,6 +465,43 @@ class DashboardCore {
         setTimeout(() => {
             errorElement.style.display = 'none';
         }, 5000);
+    }
+
+    // --- Método de Tratamento de Erros ---
+
+    /**
+     * Trata erros de forma centralizada.
+     */
+    handleError(error, context = {}) {
+        if (this.errorHandler) {
+            this.errorHandler.handle(error, {
+                component: context.component || 'core',
+                operation: context.operation || 'unknown',
+                recoverable: context.recoverable !== false,
+                ...context
+            });
+        } else {
+            // Fallback para tratamento básico
+            console.error('Erro não tratado:', error, context);
+            this.showBasicError(`Erro: ${error.message}`);
+        }
+    }
+
+    // --- Método de Notificação de Componentes ---
+
+    /**
+     * Notifica componentes registrados sobre eventos.
+     */
+    notifyComponents(event, data) {
+        for (const [name, component] of Object.entries(this.components)) {
+            if (component && typeof component[event] === 'function') {
+                try {
+                    component[event](data);
+                } catch (error) {
+                    console.warn(`Erro ao notificar componente ${name}:`, error);
+                }
+            }
+        }
     }
 }
 

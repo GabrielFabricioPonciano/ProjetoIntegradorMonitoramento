@@ -14,6 +14,7 @@ class DashboardUI {
 
     updateSummaryUI(data) {
         if (!data) {
+            console.warn('No data provided to updateSummaryUI');
             return;
         }
 
@@ -86,8 +87,9 @@ class DashboardUI {
 
         if (violationsData !== undefined) {
             const total = typeof violationsData === 'number' ? violationsData : (violationsData.total || 0);
-            const base = violationsData.base_measurements || 729;
-            const percentage = base > 0 ? ((total / base) * 100).toFixed(1) : 0;
+            const base = typeof violationsData === 'object' && violationsData.base_measurements ?
+                violationsData.base_measurements : 0;
+            const percentage = base > 0 ? ((total / base) * 100).toFixed(1) : '0.0';
 
             const violationsCountElement = document.getElementById('violations-count');
             const violationsPctElement = document.getElementById('violations-pct');
