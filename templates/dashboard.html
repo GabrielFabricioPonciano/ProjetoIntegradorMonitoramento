@@ -5,81 +5,215 @@
 
 {% block extra_head %}
 <style>
-    /* Custom CSS Variables for dark theme */
     :root {
-        --primary-bg: #0f172a;
-        --secondary-bg: #1e293b;
-        --accent-bg: #334155;
-        --glass-bg: rgba(255, 255, 255, 0.1);
-        --glass-border: rgba(255, 255, 255, 0.2);
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #111111;
+        --bg-tertiary: #1a1a1a;
+        --bg-glass: rgba(255, 255, 255, 0.05);
+        --bg-glass-hover: rgba(255, 255, 255, 0.08);
+        --border-glass: rgba(255, 255, 255, 0.1);
+        --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
+        --shadow-glass-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
         --text-primary: #ffffff;
-        --text-secondary: #e2e8f0;
-        --text-muted: #94a3b8;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --info: #3b82f6;
+        --text-secondary: #e5e5e5;
+        --text-muted: #a3a3a3;
+        --text-accent: #60a5fa;
+        --kpi-temp: #ef4444;
+        --kpi-humidity: #3b82f6;
+        --kpi-violations: #f59e0b;
+        --kpi-measurements: #10b981;
+        --gradient-bg: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0a0a0a 100%);
+        --gradient-temp: linear-gradient(135deg, #dc2626, #ef4444);
+        --gradient-humidity: linear-gradient(135deg, #2563eb, #3b82f6);
+        --gradient-violations: linear-gradient(135deg, #d97706, #f59e0b);
+        --gradient-measurements: linear-gradient(135deg, #059669, #10b981);
+        --spacing-xs: 0.5rem;
+        --spacing-sm: 0.75rem;
+        --spacing-md: 1rem;
+        --spacing-lg: 1.5rem;
+        --spacing-xl: 2rem;
+        --spacing-2xl: 3rem;
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+        --radius-full: 9999px;
+        --transition-fast: 0.15s ease;
+        --transition-normal: 0.3s ease;
+        --transition-slow: 0.5s ease;
     }
 
-    /* Body background with Tailwind-like gradient */
     body {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        margin: 0;
+        padding: 0;
         min-height: 100vh;
-        font-family: 'Inter<!-- Dashboard Module Scripts with Cache Busting -->
- <script src="{% static 'js/modules/dashboard-core.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-ui.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-data.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-charts.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-violations.js' %}?v=2"></script><script src="{% static 'js/modules/dashboard-ai.js' %}?v=2"></script>< !-- Main Dashboard Initializer --><script src="{% static 'js/dashboard-init.js' %}?v=2"></script>ui,
-        -apple-system,
-        sans-serif;
-        color: var(--text-primary);
+        background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0a0a0a 100%) !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #ffffff;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Glass morphism effect */
-    .glass-card {
-        background: var(--glass-bg);
+    nav.navbar {
+        background: #111111 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    nav.navbar .navbar-brand {
+        color: #ffffff !important;
+    }
+
+    nav.navbar .nav-link {
+        color: #e5e5e5 !important;
+    }
+
+    nav.navbar .nav-link:hover {
+        color: #60a5fa !important;
+    }
+
+    footer {
+        background: #111111 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #e5e5e5 !important;
+        margin-top: 3rem !important;
+        padding: 1.5rem 0 !important;
+    }
+
+    footer .text-muted,
+    footer small {
+        color: #a3a3a3 !important;
+    }
+
+    footer p,
+    footer .row {
+        color: #e5e5e5 !important;
+    }
+
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: var(--spacing-xl);
+        min-height: 100vh;
+    }
+
+    /* Reset básico para garantir que todos os elementos tenham estilo */
+    * {
+        box-sizing: border-box;
+    }
+
+    /* Garantir que o container principal tenha estilo */
+    .container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    /* Estilos para o loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
         backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 0.75rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: #ffffff;
     }
 
-    .glass-card:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateY(-4px);
-        box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
+    .loading-overlay.hidden {
+        display: none !important;
     }
 
-    /* Gradient backgrounds */
-    .gradient-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top: 3px solid #60a5fa;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1.5rem;
     }
 
-    .gradient-success {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 
-    .gradient-warning {
-        background: linear-gradient(135deg, #fcb045 0%, #fd1d1d 100%);
+    header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
+        animation: fadeInUp 0.8s ease-out;
     }
 
-    .gradient-danger {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    }
-
-    .gradient-info {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    /* Custom animations */
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(2rem);
         }
 
         to {
             opacity: 1;
             transform: translateY(0);
         }
+    }
+
+    header h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--text-primary), var(--text-accent));
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: var(--spacing-md);
+        letter-spacing: -0.025em;
+    }
+
+    header p {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-xl);
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md) var(--spacing-xl);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-full);
+        font-weight: 500;
+        font-size: 0.875rem;
+        box-shadow: var(--shadow-glass);
+        transition: var(--transition-normal);
+        margin: 0 auto;
+    }
+
+    .status-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-glass-hover);
+        background: var(--bg-glass-hover);
+    }
+
+    .status-badge i {
+        font-size: 0.75rem;
+        animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
@@ -90,280 +224,613 @@
         }
 
         50% {
-            opacity: 0.5;
+            opacity: 0.6;
         }
     }
 
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out;
+    .info-banner {
+        margin-bottom: var(--spacing-2xl);
+        animation: fadeInUp 1s ease-out;
     }
 
-    .animate-pulse-custom {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    /* Chart containers */
-    .chart-container {
-        position: relative;
-        height: 320px;
-        width: 100%;
-    }
-
-    /* Loading states */
-    .skeleton-loader {
-        animation: pulse 1.5s infinite;
-        background: linear-gradient(90deg, #374151, #4b5563, #374151);
-        background-size: 200% 100%;
-        border-radius: 0.5rem;
-    }
-
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #1e293b;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #475569;
-        border-radius: 9999px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: #64748b;
-    }
-
-    /* Custom Range Slider */
-    .custom-range-slider {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-        height: 8px;
-        border-radius: 4px;
-        background: linear-gradient(to right, #3b82f6, #8b5cf6);
-        outline: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .custom-range-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #ffffff, #f1f5f9);
-        border: 3px solid #3b82f6;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        transition: all 0.3s ease;
-    }
-
-    .custom-range-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
-    }
-
-    .custom-range-slider::-moz-range-thumb {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #ffffff, #f1f5f9);
-        border: 3px solid #3b82f6;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        transition: all 0.3s ease;
-    }
-
-    .custom-range-slider::-moz-range-thumb:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
-    }
-
-    /* Quick Period Buttons */
-    .quick-period-btn {
-        flex: 1;
-        min-height: 60px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 0.75rem;
-        color: white;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        cursor: pointer;
+    .banner-content {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        gap: 0.25rem;
-        padding: 0.75rem;
+        gap: var(--spacing-lg);
+        padding: var(--spacing-xl);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-glass);
+        transition: var(--transition-normal);
     }
 
-    .quick-period-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.3);
+    .banner-content:hover {
+        background: var(--bg-glass-hover);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--shadow-glass-hover);
     }
 
-    .quick-period-btn:active {
-        transform: translateY(0);
-    }
-
-    /* Action Buttons */
-    .action-btn {
-        flex: 1;
-        min-height: 60px;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(139, 92, 246, 0.8));
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 0.75rem;
+    .banner-icon {
+        flex-shrink: 0;
+        width: 4rem;
+        height: 4rem;
+        background: var(--gradient-measurements);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    .banner-text h5 {
+        margin: 0 0 var(--spacing-sm) 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .banner-text p {
+        margin: 0 0 var(--spacing-sm) 0;
+        color: var(--text-secondary);
         font-weight: 500;
-        transition: all 0.3s ease;
-        cursor: pointer;
+    }
+
+    .banner-text small {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-xl);
+        margin-bottom: var(--spacing-2xl);
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0 var(--spacing-md);
+        align-items: stretch;
+        justify-items: center;
+    }
+
+    .kpi-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        box-shadow: var(--shadow-glass);
+        transition: var(--transition-normal);
+        animation: fadeInUp 1.2s ease-out;
+        position: relative;
+        overflow: hidden;
+        min-height: 240px;
+        width: 100%;
+        max-width: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        aspect-ratio: 1;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--kpi-temp);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-glass-hover);
+        background: var(--bg-glass-hover);
+    }
+
+    .kpi-card:nth-child(2)::before {
+        background: var(--kpi-humidity);
+    }
+
+    .kpi-card:nth-child(3)::before {
+        background: var(--kpi-violations);
+    }
+
+    .kpi-card:nth-child(4)::before {
+        background: var(--kpi-measurements);
+    }
+
+    .kpi-icon {
+        width: 5rem;
+        height: 5rem;
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--spacing-md) auto;
+        position: relative;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        font-size: 1.75rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .kpi-icon.temp {
+        background: var(--gradient-temp);
+    }
+
+    .kpi-icon.humidity {
+        background: var(--gradient-humidity);
+    }
+
+    .kpi-icon.violations {
+        background: var(--gradient-violations);
+    }
+
+    .kpi-icon.measurements {
+        background: var(--gradient-measurements);
+    }
+
+    .kpi-content {
+        text-align: center;
+        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
-        padding: 0.75rem;
+        flex: 1;
+    }
+
+    .kpi-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0 0 var(--spacing-sm) 0;
+        line-height: 1.2;
+    }
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 var(--spacing-sm) 0;
+        line-height: 0.9;
+        display: block;
+    }
+
+    .kpi-details {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        opacity: 0.8;
+        display: block;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .kpi-details:not(:last-child) {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .skeleton-loader {
+        background: linear-gradient(90deg, var(--bg-tertiary), var(--bg-secondary), var(--bg-tertiary));
+        background-size: 200% 100%;
+        border-radius: var(--radius-sm);
+        animation: skeleton-loading 1.5s infinite;
+    }
+
+    @keyframes skeleton-loading {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    /* ---------- 9. SEÇÃO DE GRÁFICOS ---------- */
+    .charts-section {
+        animation: fadeInUp 1.4s ease-out;
+    }
+
+    .charts-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--text-primary), var(--text-accent));
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: var(--spacing-sm);
+        letter-spacing: -0.025em;
+    }
+
+    .charts-header p {
+        font-size: 1.125rem;
+        color: var(--text-secondary);
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: var(--spacing-xl);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .chart-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl);
+        box-shadow: var(--shadow-glass);
+        transition: all var(--transition-normal);
         position: relative;
         overflow: hidden;
     }
 
-    .action-btn::before {
+    .chart-card::before {
         content: '';
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
+        background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.03),
+                transparent);
+        transition: left 0.6s ease-in-out;
+        pointer-events: none;
     }
 
-    .action-btn:hover::before {
+    .chart-card:hover::before {
         left: 100%;
     }
 
-    .action-btn:hover {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(139, 92, 246, 0.9));
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    .chart-card:hover {
+        background: var(--bg-glass-hover);
+        box-shadow: var(--shadow-glass-hover);
+        transform: translateY(-4px);
+        border-color: rgba(255, 255, 255, 0.15);
     }
 
-    .action-btn:active {
-        transform: translateY(0);
+    .chart-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
     }
 
-    /* Custom Period Panel */
-    .custom-period-panel {
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 1rem;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    }
-
-    .custom-period-panel input {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 0.5rem;
-        color: white;
-        padding: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .custom-period-panel input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .custom-period-panel button {
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-        border: none;
-        border-radius: 0.5rem;
-        color: white;
-        padding: 0.5rem 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .custom-period-panel button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    }
-
-    /* KPI Icons */
-    .kpi-icon {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
+    .chart-icon {
+        flex-shrink: 0;
+        width: 4rem;
+        height: 4rem;
+        background: var(--gradient-measurements);
+        border-radius: var(--radius-full);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1rem;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    .chart-info h3 {
+        margin: 0 0 var(--spacing-sm) 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .chart-info p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .chart-container {
         position: relative;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        height: 280px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
+        backdrop-filter: blur(20px);
+        transition: all var(--transition-normal);
+        overflow: hidden;
     }
 
-    /* Status badge */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 2rem;
-        font-weight: 500;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        transition: all 0.3s ease;
+    .chart-container::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg,
+                rgba(239, 68, 68, 0.1),
+                rgba(59, 130, 246, 0.1),
+                rgba(16, 185, 129, 0.1),
+                rgba(245, 158, 11, 0.1));
+        border-radius: var(--radius-lg);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+        z-index: -1;
     }
 
-    .status-badge:hover {
+    .chart-container:hover::before {
+        opacity: 1;
+    }
+
+    .chart-container:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.12);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
-    /* Responsive adjustments */
+    .chart-container canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+        visibility: visible !important;
+        border-radius: var(--radius-md);
+    }
+
+    .toast-container {
+        z-index: 1050;
+    }
+
+    .toast {
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .toast .toast-body {
+        color: #ffffff !important;
+    }
+
+    @media (max-width: 1200px) {
+        .kpi-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-lg);
+            max-width: 1000px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-lg);
+            max-width: 600px;
+        }
+    }
+
     @media (max-width: 768px) {
         .dashboard-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
+            padding: var(--spacing-lg);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+        }
+
+        header p {
+            font-size: 1.125rem;
         }
 
         .kpi-grid {
             grid-template-columns: 1fr;
-            gap: 1rem;
+            gap: var(--spacing-lg);
+            max-width: 400px;
         }
 
-        .charts-section {
+        .kpi-card {
+            padding: var(--spacing-lg);
+            min-height: 200px;
+            aspect-ratio: 1.1;
+        }
+
+        .banner-content {
+            flex-direction: column;
+            text-align: center;
+            gap: var(--spacing-md);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-container {
+            padding: var(--spacing-md);
+        }
+
+        header h1 {
+            font-size: 2rem;
+        }
+
+        .status-badge {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            font-size: 0.8125rem;
+        }
+
+        .kpi-grid {
+            padding: 0;
+        }
+
+        .kpi-card {
+            min-height: 180px;
+            padding: var(--spacing-md);
+            aspect-ratio: 1.2;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+        }
+
+        .kpi-icon {
+            width: 4rem;
+            height: 4rem;
+            font-size: 1.5rem;
+        }
+    }
+
+    /* ---------- 10. RESPONSIVIDADE DOS GRÁFICOS ---------- */
+    @media (max-width: 1200px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .charts-grid {
             grid-template-columns: 1fr;
         }
+
+        .chart-card {
+            padding: var(--spacing-lg);
+        }
+
+        .chart-header {
+            flex-direction: column;
+            text-align: center;
+            gap: var(--spacing-md);
+        }
+
+        .chart-container {
+            height: 200px;
+        }
+
+        .charts-header h2 {
+            font-size: 1.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .chart-container {
+            height: 180px;
+        }
+
+        .chart-card {
+            padding: var(--spacing-md);
+        }
+    }
+
+    /* ---------- UTILITÁRIOS TAILWIND EQUIVALENTES ---------- */
+    .text-white {
+        color: var(--text-primary);
+    }
+
+    .text-muted {
+        color: var(--text-muted);
+    }
+
+    .text-green-400 {
+        color: #4ade80;
+    }
+
+    .text-slate-300 {
+        color: var(--text-secondary);
+    }
+
+    .text-slate-400 {
+        color: var(--text-muted);
+    }
+
+    .text-2xl {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+
+    .text-xl {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
+
+    .text-5xl {
+        font-size: 3rem;
+        line-height: 1;
+    }
+
+    .font-bold {
+        font-weight: 700;
+    }
+
+    .mb-2 {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .mb-4 {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .mb-8 {
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .mb-12 {
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .ms-2 {
+        margin-left: var(--spacing-sm);
+    }
+
+    .bg-gradient-to-r {
+        background: linear-gradient(to right, var(--text-primary), var(--text-accent));
+    }
+
+    .bg-clip-text {
+        background-clip: text;
+        -webkit-background-clip: text;
+    }
+
+    .text-transparent {
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .animate-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .mx-auto {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- CSRF Token -->
     {% csrf_token %}
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <h4>Carregando Dashboard</h4>
-        <p class="text-muted">Inicializando sistema de monitoramento...</p>
-    </div>
-
-    <!-- Toast Notifications -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="error-toast" class="toast align-items-center text-white border-0" role="alert">
             <div class="d-flex">
@@ -385,7 +852,6 @@
         </div>
     </div>
 
-    <!-- Header Section -->
     <header class="text-center mb-12 animate-fade-in-up">
         <h1 class="text-5xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-4">
             Dashboard Ambiental
@@ -398,193 +864,7 @@
         </div>
     </header>
 
-    <!-- Controls Section -->
-    <section class="glass-card p-8 mb-12 animate-fade-in-up">
-        <h3 class="text-2xl font-semibold mb-6 flex items-center gap-3">
-            <i class="fas fa-sliders-h text-blue-400"></i>
-            Controles do Sistema
-        </h3>
-
-        <!-- Period Selector -->
-        <div class="mb-8">
-            <div class="text-center mb-4">
-                <h4 class="text-lg font-medium text-white mb-2">Selecionar Período</h4>
-                <p class="text-sm text-slate-400">Escolha o período para análise dos dados</p>
-            </div>
-
-            <div class="flex flex-wrap justify-center gap-3 period-controls">
-                <button type="button"
-                    class="period-btn px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95"
-                    data-period="1" onclick="changePeriod(1)">
-                    <i class="fas fa-clock mr-2"></i>1 dia
-                </button>
-                <button type="button"
-                    class="period-btn px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95"
-                    data-period="7" onclick="changePeriod(7)">
-                    <i class="fas fa-calendar-week mr-2"></i>7 dias
-                </button>
-                <button type="button"
-                    class="period-btn px-5 py-3 bg-white/20 border-2 border-white/40 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer shadow-lg hover:bg-white/25 hover:border-white/50 hover:scale-105 active:scale-95 active"
-                    data-period="30" onclick="changePeriod(30)">
-                    <i class="fas fa-calendar-alt mr-2"></i>30 dias
-                </button>
-                <button type="button"
-                    class="period-btn px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95"
-                    data-period="90" onclick="changePeriod(90)">
-                    <i class="fas fa-calendar-check mr-2"></i>90 dias
-                </button>
-                <button type="button"
-                    class="period-btn px-5 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-xl text-white font-medium transition-all duration-300 cursor-pointer hover:from-purple-500/30 hover:to-pink-500/30 hover:border-purple-400/50 hover:scale-105 active:scale-95"
-                    data-period="custom" onclick="showCustomPeriod()">
-                    <i class="fas fa-cog mr-2"></i>Personalizado
-                </button>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="border-t border-white/10 pt-6">
-            <div class="text-center mb-4">
-                <h4 class="text-lg font-medium text-white mb-2">Ações do Sistema</h4>
-                <p class="text-sm text-slate-400">Controles avançados e relatórios</p>
-            </div>
-
-            <div class="flex flex-wrap justify-center gap-4">
-                <button type="button" id="force-cycle-btn"
-                    class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2">
-                    <i class="fas fa-play-circle"></i>
-                    <span class="hidden sm:inline">Forçar Ciclo</span>
-                    <span class="sm:hidden">Atualizar</span>
-                </button>
-
-                <button type="button" onclick="window.dashboard.core.debug(); return false;"
-                    class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold rounded-xl transition-all duration-300 hover:from-gray-600 hover:to-gray-700 hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2">
-                    <i class="fas fa-bug"></i>
-                    <span class="hidden sm:inline">Debug Info</span>
-                    <span class="sm:hidden">Debug</span>
-                </button>
-
-                <div class="dropdown">
-                    <button type="button"
-                        class="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded-xl transition-all duration-300 hover:from-green-600 hover:to-teal-700 hover:shadow-xl hover:scale-105 active:scale-95 dropdown-toggle flex items-center gap-2"
-                        data-bs-toggle="dropdown">
-                        <i class="fas fa-file-export"></i>
-                        <span class="hidden sm:inline">Relatórios</span>
-                        <span class="sm:hidden">Exportar</span>
-                    </button>
-                    <ul class="dropdown-menu bg-slate-800 border-slate-600 shadow-xl">
-                        <li><button
-                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
-                                onclick="downloadReport('pdf', 30); return false;">
-                                <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (30 dias)</button></li>
-                        <li><button
-                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
-                                onclick="downloadReport('excel', 30); return false;">
-                                <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (30 dias)</button></li>
-                        <li>
-                            <hr class="dropdown-divider border-slate-600 my-1">
-                        </li>
-                        <li><button
-                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
-                                onclick="downloadReport('pdf', 90); return false;">
-                                <i class="fas fa-file-pdf text-red-400 me-2"></i>PDF (90 dias)</button></li>
-                        <li><button
-                                class="dropdown-item text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 py-2 px-4"
-                                onclick="downloadReport('excel', 90); return false;">
-                                <i class="fas fa-file-excel text-green-400 me-2"></i>Excel (90 dias)</button></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Custom Period Panel -->
-    <div id="custom-period-panel" class="glass-card p-8 mb-12 animate-fade-in-up" style="display: none;">
-        <div class="text-center mb-6">
-            <h3 class="text-2xl font-bold text-white mb-2 flex items-center justify-center">
-                Período Personalizado
-            </h3>
-            <p class="text-slate-300">Selecione o período desejado para análise</p>
-        </div>
-
-        <div class="max-w-md mx-auto">
-            <!-- Slider Container -->
-            <div class="mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <label for="period-slider" class="text-lg font-semibold text-white">Período (dias)</label>
-                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 rounded-lg">
-                        <span class="text-white font-bold text-lg" id="slider-value">30</span>
-                        <span class="text-blue-100 text-sm">dias</span>
-                    </div>
-                </div>
-
-                <!-- Custom Range Slider -->
-                <div class="relative">
-                    <input type="range" class="custom-range-slider" id="period-slider" min="1" max="365" value="30">
-                    <div class="flex justify-between text-sm text-slate-400 mt-2">
-                        <span>1 dia</span>
-                        <span>365 dias</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Period Buttons -->
-            <div class="grid grid-cols-2 gap-3 mb-8">
-                <button class="quick-period-btn" data-days="7">
-                    <span class="font-semibold">7 dias</span>
-                    <span class="text-xs opacity-75">Semana</span>
-                </button>
-                <button class="quick-period-btn" data-days="30">
-                    <span class="font-semibold">30 dias</span>
-                    <span class="text-xs opacity-75">Mês</span>
-                </button>
-                <button class="quick-period-btn" data-days="90">
-                    <span class="font-semibold">90 dias</span>
-                    <span class="text-xs opacity-75">Trimestre</span>
-                </button>
-                <button class="quick-period-btn" data-days="180">
-                    <span class="font-semibold">180 dias</span>
-                    <span class="text-xs opacity-75">Semestre</span>
-                </button>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-4 justify-center">
-                <button
-                    class="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg transition-all duration-300 hover:from-gray-700 hover:to-gray-800 hover:shadow-lg flex items-center gap-2"
-                    onclick="dashboard.hideCustomPeriod()">
-                    <i class="fas fa-times"></i>
-                    Cancelar
-                </button>
-                <button
-                    class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-700 hover:shadow-lg hover:scale-105 flex items-center gap-2"
-                    onclick="dashboard.applyCustomPeriod()">
-                    <i class="fas fa-check"></i>
-                    Aplicar Período
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Debug Panel -->
-    <div id="debug-panel" class="glass-card p-6 mb-12 animate-fade-in-up"
-        style="display: none; position: fixed; bottom: 20px; right: 20px; width: 400px; max-height: 300px; overflow-y: auto; z-index: 9999; font-size: 12px;">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-white">Debug Console</h3>
-            <button onclick="document.getElementById('debug-panel').style.display='none'"
-                class="text-white hover:text-gray-300">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div id="debug-output"
-            class="text-green-400 font-mono text-xs bg-slate-900 p-2 rounded max-h-200 overflow-y-auto"></div>
-    </div>
-
-    <!-- Debug Toggle Button -->
-    <button onclick="document.getElementById('debug-panel').style.display='block'"
-        style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; background: #3b82f6; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-        <i class="fas fa-bug"></i>
-    </button>
-    <section class="info-banner">
+    <section class="info-banner mb-12">
         <div class="banner-content">
             <div class="banner-icon">
                 <i class="fas fa-leaf"></i>
@@ -597,234 +877,94 @@
         </div>
     </section>
 
-    <!-- KPI Cards -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <!-- Temperature -->
-        <div class="glass-card p-6 animate-fade-in-up">
-            <div class="kpi-icon gradient-danger mx-auto">
+    <section class="kpi-grid">
+        <div class="kpi-card animate-fade-in-up">
+            <div class="kpi-icon temp mx-auto">
                 <i class="fas fa-thermometer-half text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="temp-skeleton"></div>
-            <div class="text-center" id="temp-content" style="display: none;">
-                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Temperatura Média</div>
-                <div class="text-3xl font-bold text-white mb-2" id="temp-mean">--</div>
-                <div class="text-sm text-slate-400" id="temp-range">Min: -- | Max: --</div>
+            <div class="kpi-content" id="temp-content" style="display: none;">
+                <div class="kpi-label">Temperatura Média</div>
+                <div class="kpi-value" id="temp-mean">--</div>
+                <div class="kpi-details" id="temp-range">Min: -- | Max: --</div>
             </div>
         </div>
 
-        <!-- Humidity -->
-        <div class="glass-card p-6 animate-fade-in-up">
-            <div class="kpi-icon gradient-info mx-auto">
+        <div class="kpi-card animate-fade-in-up">
+            <div class="kpi-icon humidity mx-auto">
                 <i class="fas fa-tint text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="humidity-skeleton"></div>
-            <div class="text-center" id="humidity-content" style="display: none;">
-                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Umidade Média</div>
-                <div class="text-3xl font-bold text-white mb-2" id="rh-mean">--</div>
-                <div class="text-sm text-slate-400" id="rh-range">Min: -- | Max: --</div>
+            <div class="kpi-content" id="humidity-content" style="display: none;">
+                <div class="kpi-label">Umidade Média</div>
+                <div class="kpi-value" id="rh-mean">--</div>
+                <div class="kpi-details" id="rh-range">Min: -- | Max: --</div>
             </div>
         </div>
 
-        <!-- Violations -->
-        <div class="glass-card p-6 animate-fade-in-up">
-            <div class="kpi-icon gradient-warning mx-auto">
+        <div class="kpi-card animate-fade-in-up">
+            <div class="kpi-icon violations mx-auto">
                 <i class="fas fa-exclamation-triangle text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="violations-skeleton"></div>
-            <div class="text-center" id="violations-content" style="display: none;">
-                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Total de Violações</div>
-                <div class="text-3xl font-bold text-white mb-2" id="violations-count">--</div>
-                <div class="text-sm text-slate-400" id="violations-pct">-- do total</div>
-                <div class="text-sm text-slate-400" id="violations-base">Base: -- medições</div>
+            <div class="kpi-content" id="violations-content" style="display: none;">
+                <div class="kpi-label">Total de Violações</div>
+                <div class="kpi-value" id="violations-count">--</div>
+                <div class="kpi-details" id="violations-pct">-- do total</div>
+                <div class="kpi-details" id="violations-base">Base: -- medições</div>
             </div>
         </div>
 
-        <!-- Measurements -->
-        <div class="glass-card p-6 animate-fade-in-up">
-            <div class="kpi-icon gradient-success mx-auto">
+        <div class="kpi-card animate-fade-in-up">
+            <div class="kpi-icon measurements mx-auto">
                 <i class="fas fa-chart-bar text-2xl text-white"></i>
             </div>
             <div class="skeleton-loader h-8 w-3/4 mx-auto mb-2" id="measurements-skeleton"></div>
-            <div class="text-center" id="measurements-content" style="display: none;">
-                <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Total de Medições</div>
-                <div class="text-3xl font-bold text-white mb-2" id="total-measurements">--</div>
-                <div class="text-sm text-slate-400">registros no período</div>
+            <div class="kpi-content" id="measurements-content" style="display: none;">
+                <div class="kpi-label">Total de Medições</div>
+                <div class="kpi-value" id="total-measurements">--</div>
+                <div class="kpi-details">registros no período</div>
             </div>
         </div>
     </section>
 
-    <!-- Charts Section -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-        <!-- Temperature Chart -->
-        <div class="glass-card p-6 animate-fade-in-up">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold text-white flex items-center">
-                    <i class="fas fa-thermometer-half mr-3 text-red-400"></i>
-                    Temperatura ao Longo do Tempo
-                </h3>
-                <div class="flex space-x-2">
-                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('temp')">Linha</button>
-                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('temp')">Barra</button>
-                </div>
-            </div>
-            <div class="chart-container">
-                <div class="text-center py-5" id="temp-chart-placeholder">
-                    <div class="loading-spinner"></div>
-                    <p class="mt-3 text-slate-300">Carregando gráfico...</p>
-                </div>
-                <canvas id="tempChart" style="display: none;"></canvas>
-            </div>
+    <!-- ========== GRÁFICOS ANALÍTICOS ========== -->
+    <section class="charts-section mb-12">
+        <div class="charts-header text-center mb-8">
+            <h2 class="text-2xl font-bold text-white mb-2">Análise Detalhada</h2>
+            <p class="text-slate-300">Tendências e padrões dos últimos 30 dias</p>
         </div>
 
-        <!-- Humidity Chart -->
-        <div class="glass-card p-6 animate-fade-in-up">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold text-white flex items-center">
-                    <i class="fas fa-tint mr-3 text-blue-400"></i>
-                    Umidade ao Longo do Tempo
-                </h3>
-                <div class="flex space-x-2">
-                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('humidity')">Linha</button>
-                    <button class="btn-secondary text-xs px-3 py-1" onclick="toggleChart('humidity')">Barra</button>
-                </div>
-            </div>
-            <div class="chart-container">
-                <div class="text-center py-5" id="rh-chart-placeholder">
-                    <div class="loading-spinner"></div>
-                    <p class="mt-3 text-slate-300">Carregando gráfico...</p>
-                </div>
-                <canvas id="rhChart" style="display: none;"></canvas>
-            </div>
-        </div>
-    </section>
-
-    <!-- Violations Section -->
-    <section class="glass-card p-6 mb-12 animate-fade-in-up">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-            <h3 class="text-xl font-bold text-white flex items-center mb-4 lg:mb-0">
-                <i class="fas fa-exclamation-triangle mr-3 text-yellow-400"></i>
-                Últimas Violações
-            </h3>
-
-            <div class="flex flex-col sm:flex-row gap-4">
-                <div class="flex items-center gap-4">
-                    <span class="text-sm font-medium text-slate-300">Filtrar por:</span>
-                    <div class="flex gap-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="form-check-input filter-checkbox" id="filter-temp-violations"
-                                checked>
-                            <span class="text-sm text-slate-300">Temperatura</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="form-check-input filter-checkbox"
-                                id="filter-humidity-violations" checked>
-                            <span class="text-sm text-slate-300">Umidade</span>
-                        </label>
+        <div class="charts-grid">
+            <!-- Gráfico de Temperatura -->
+            <div class="chart-card animate-fade-in-up">
+                <div class="chart-header">
+                    <div class="chart-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="chart-info">
+                        <h3>Temperatura (°C)</h3>
+                        <p>Variação diária dos últimos 30 dias</p>
                     </div>
                 </div>
-
-                <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-slate-300">Mostrar:</span>
-                    <select
-                        class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        id="violations-limit">
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <span class="text-sm text-slate-400">violações</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-slate-600">
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="timestamp">
-                            <i class="fas fa-clock me-2"></i>Data/Hora
-                            <i class="fas fa-sort sort-icon text-slate-500"></i>
-                        </th>
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="temperature">
-                            <i class="fas fa-thermometer-half me-2"></i>Temperatura
-                            <i class="fas fa-sort sort-icon text-slate-500"></i>
-                        </th>
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="humidity">
-                            <i class="fas fa-tint me-2"></i>Umidade
-                            <i class="fas fa-sort sort-icon text-slate-500"></i>
-                        </th>
-                        <th class="text-left py-3 px-4 font-semibold text-slate-300 sortable" data-sort="reason">
-                            <i class="fas fa-exclamation-triangle me-2"></i>Motivo
-                            <i class="fas fa-sort sort-icon text-slate-500"></i>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody id="violations-table" class="text-slate-300">
-                    <tr>
-                        <td colspan="4" class="text-center py-8">
-                            <div class="loading-spinner mx-auto mb-3"></div>
-                            <p class="text-slate-400">Carregando violações...</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- AI Section -->
-    <section class="mb-12 animate-fade-in-up">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-white mb-3 flex items-center justify-center">
-                <i class="fas fa-brain mr-3 text-purple-400"></i>
-                Inteligência Artificial
-            </h2>
-            <p class="text-lg text-slate-300">Análise avançada e previsões automatizadas</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Anomalies -->
-            <div class="glass-card p-6 text-center">
-                <div
-                    class="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-exclamation-circle text-2xl text-white"></i>
-                </div>
-                <h4 class="text-lg font-semibold text-white mb-4">Detecção de Anomalias</h4>
-                <div id="ai-anomalies-content">
-                    <div class="text-center py-4">
-                        <div class="loading-spinner mx-auto mb-3"></div>
-                        <p class="text-slate-400">Analisando padrões...</p>
-                    </div>
+                <div class="chart-container">
+                    <canvas id="temperature-chart" width="400" height="200"></canvas>
                 </div>
             </div>
 
-            <!-- Predictions -->
-            <div class="glass-card p-6 text-center">
-                <div
-                    class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-chart-line text-2xl text-white"></i>
-                </div>
-                <h4 class="text-lg font-semibold text-white mb-4">Previsões</h4>
-                <div id="ai-predictions-content">
-                    <div class="text-center py-4">
-                        <div class="loading-spinner mx-auto mb-3"></div>
-                        <p class="text-slate-400">Calculando tendências...</p>
+            <!-- Gráfico de Umidade -->
+            <div class="chart-card animate-fade-in-up">
+                <div class="chart-header">
+                    <div class="chart-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="chart-info">
+                        <h3>Umidade Relativa (%)</h3>
+                        <p>Variação diária dos últimos 30 dias</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Patterns -->
-            <div class="glass-card p-6 text-center">
-                <div
-                    class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-search text-2xl text-white"></i>
-                </div>
-                <h4 class="text-lg font-semibold text-white mb-4">Análise de Padrões</h4>
-                <div id="ai-patterns-content">
-                    <div class="text-center py-4">
-                        <div class="loading-spinner mx-auto mb-3"></div>
-                        <p class="text-slate-400">Identificando correlações...</p>
-                    </div>
+                <div class="chart-container">
+                    <canvas id="humidity-chart" width="400" height="200"></canvas>
                 </div>
             </div>
         </div>
@@ -833,83 +973,12 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- Core Dependencies -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js must be loaded first -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Dashboard Modules -->
-<script src="{% static 'js/modules/dashboard-core.js' %}"></script>
-<script src="{% static 'js/modules/dashboard-ui.js' %}"></script>
-<script src="{% static 'js/modules/dashboard-data.js' %}"></script>
-<script src="{% static 'js/modules/dashboard-charts.js' %}"></script>
-<script src="{% static 'js/modules/dashboard-violations.js' %}"></script>
-<script src="{% static 'js/modules/dashboard-ai.js' %}"></script>
-
-<!-- Main Dashboard Initializer -->
-<script src="{% static 'js/dashboard-init.js' %}"></script>
-
-<!-- Custom Period Panel JavaScript -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        console.log('🔧 Custom Period Panel: DOMContentLoaded fired');
-
-        // Slider functionality
-        const slider = document.getElementById('period-slider');
-        const sliderValue = document.getElementById('slider-value');
-
-        if (slider && sliderValue) {
-            slider.addEventListener('input', function () {
-                sliderValue.textContent = this.value;
-            });
-        }
-
-        // Quick period buttons
-        const quickPeriodButtons = document.querySelectorAll('.quick-period-btn');
-        quickPeriodButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const days = parseInt(this.getAttribute('data-days'));
-                if (slider) {
-                    slider.value = days;
-                    sliderValue.textContent = days;
-                }
-            });
-        });
-
-        // Force cycle button
-        const forceCycleBtn = document.getElementById('force-cycle-btn');
-        if (forceCycleBtn) {
-            forceCycleBtn.addEventListener('click', function () {
-                console.log('🔄 Force Cycle button clicked');
-                // Add loading state
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span class="hidden sm:inline">Atualizando...</span><span class="sm:hidden">...</span>';
-                this.disabled = true;
-
-                // Simulate API call
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-play-circle"></i> <span class="hidden sm:inline">Forçar Ciclo</span><span class="sm:hidden">Atualizar</span>';
-                    this.disabled = false;
-
-                    // Show success toast
-                    const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
-                    document.getElementById('success-message').textContent = 'Ciclo forçado executado com sucesso!';
-                    successToast.show();
-
-                    // Reload dashboard data - call the core module directly
-                    if (window.dashboard && window.dashboard.core && typeof window.dashboard.core.reloadAllData === 'function') {
-                        console.log('🔄 Calling dashboard.core.reloadAllData()');
-                        window.dashboard.core.reloadAllData();
-                    } else {
-                        console.error('❌ dashboard.core.reloadAllData not available');
-                        console.log('Available dashboard object:', window.dashboard);
-                    }
-                }, 2000);
-            });
-        }
-
-        console.log('🔧 Custom Period Panel: Initialization completed');
-    });
-</script><!-- CSS Debug Script -->
-<script src="{% static 'js/debug-css.js' %}"></script>
-<!-- Force Show KPIs Script -->
-<script src="{% static 'js/force-show-kpis.js' %}?v=2"></script>
+<script src="{% static 'js/modules/dashboard-core.js' %}?v=5"></script>
+<script src="{% static 'js/modules/dashboard-ui.js' %}?v=5"></script>
+<script src="{% static 'js/modules/dashboard-data.js' %}?v=5"></script>
+<script src="{% static 'js/modules/dashboard-charts.js' %}?v=5"></script>
+<script src="{% static 'js/dashboard-init.js' %}?v=5"></script>
 {% endblock %}

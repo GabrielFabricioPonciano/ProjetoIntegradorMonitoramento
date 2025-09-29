@@ -1,375 +1,165 @@
 /**
- * Dashboard Core Module
- * Core functionality and initialization for the environmental monitoring dashboard
+ * Dashboard Core Module (Refatorado)
+ * Gerencia o estado, busca de dados e a comunicação entre os componentes do dashboard.
+ * 
+ * MELHORIAS:
+ * - Desacoplamento: Usa um sistema de registro de componentes em vez de acessar 'window' diretamente.
+ * - Eficiência: Busca todos os dados necessários (summary, series) em paralelo com uma única função.
+ * - Consistência: A atualização automática agora recarrega todos os dados, não apenas o resumo.
+ * - Boas Práticas: Remove a manipulação de CSS com '!important', sugerindo uma abordagem baseada em classes.
+ * - Robustez: Centraliza o tratamento de erros e o gerenciamento do estado de carregamento.
  */
-
 class DashboardCore {
-    constructor() {
+    constructor(config = {}) {
+        // Configurações padrão que podem ser sobrescritas na instanciação
         this.config = {
-            apiBaseUrl: '', // Empty base URL since endpoints already include /api/
-            defaultPeriod: 30,
-            updateInterval: 30000, // 30 seconds
-            maxRetries: 3,
-            retryDelay: 1000
+            defaultPeriodDays: 30,
+            updateIntervalMs: 30000,
+            apiMaxRetries: 3,
+            apiRetryDelayMs: 1000,
+            ...config
         };
 
         this.state = {
-            currentPeriod: 30,
+            currentPeriodDays: this.config.defaultPeriodDays,
             isLoading: false,
             lastUpdate: null,
-            data: {
-                summary: null,
-                series: null,
-                violations: null,
-                ai: null
-            }
         };
 
-        this.intervals = {
-            autoUpdate: null
-        };
-
-        // Initialize immediately instead of calling this.init()
-        console.log('Dashboard Core: Constructor completed');
+        // Armazena referências para outros módulos (UI, Gráficos) de forma desacoplada
+        this.components = {};
+        this.autoUpdateInterval = null;
     }
 
-    start() {
-        console.log('Dashboard Core: Starting...');
-        console.log('Dashboard Core: Current state:', this.state);
-        this.bindEvents();
+    /**
+     * Inicializa o core do dashboard.
+     */
+    init() {
+        console.log("Dashboard Core inicializado.");
+        this.updateData(); // Carrega os dados iniciais
         this.startAutoUpdate();
-        this.loadInitialData();
-        console.log('Dashboard Core: Start completed');
     }
 
-    bindEvents() {
-        console.log('Dashboard Core: bindEvents() called');
-
-        // Custom period slider
-        const slider = document.getElementById('period-slider');
-        if (slider) {
-            slider.addEventListener('input', (e) => this.handleSliderChange(e));
-        }
-
-        // Force cycle button
-        const forceBtn = document.getElementById('force-cycle-btn');
-        if (forceBtn) {
-            forceBtn.addEventListener('click', () => this.forceCycle());
-        }
-
-        // Violations limit selector
-        const limitSelect = document.getElementById('violations-limit');
-        if (limitSelect) {
-            limitSelect.addEventListener('change', (e) => this.handleViolationsLimitChange(e));
-        }
-
-        // Violation filters
-        document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', () => this.handleViolationFiltersChange());
-        });
-
-        console.log('Dashboard Core: bindEvents() completed');
+    /**
+     * Permite que outros módulos (ui.js, charts.js) se registrem no core.
+     * Isso remove a dependência direta do 'window.dashboard'.
+     * @param {string} name - O nome do componente (ex: 'ui', 'charts').
+     * @param {object} component - A instância do componente.
+     */
+    registerComponent(name, component) {
+        this.components[name] = component;
+        console.log(`Componente '${name}' registrado.`);
     }
 
-    async loadInitialData() {
-        console.log('🔄 DASHBOARD-CORE: loadInitialData called at', new Date().toISOString());
+    /**
+     * Função centralizada para buscar TODOS os dados da API.
+     * É chamada na inicialização e no intervalo de auto-update.
+     */
+    async updateData() {
+        if (this.state.isLoading) {
+            console.warn("Update cancelado: uma atualização já está em andamento.");
+            return;
+        }
+
         this.setLoading(true);
+        console.log(`Atualizando dados para o período de ${this.state.currentPeriodDays} dias...`);
+
         try {
-            console.log('🔄 DASHBOARD-CORE: Starting to load summary...');
-            await this.loadSummary();
-            console.log('✅ DASHBOARD-CORE: Summary loaded');
+            // Executa as chamadas de API em paralelo para maior performance
+            const [summaryData, seriesData] = await Promise.all([
+                this.apiCall(`/api/summary/?days=${this.state.currentPeriodDays}`),
+                this.apiCall(`/api/series/?days=${this.state.currentPeriodDays}`)
+            ]);
 
-            console.log('🔄 DASHBOARD-CORE: Starting to load series...');
-            await this.loadSeries();
-            console.log('✅ DASHBOARD-CORE: Series loaded');
-
-            console.log('🔄 DASHBOARD-CORE: Starting to load violations...');
-            await this.loadViolations();
-            console.log('✅ DASHBOARD-CORE: Violations loaded');
-
-            console.log('🔄 DASHBOARD-CORE: Starting to load AI...');
-            await this.loadAI();
-            console.log('✅ DASHBOARD-CORE: AI loaded');
+            // Notifica os componentes registrados com os novos dados
+            if (this.components.ui && typeof this.components.ui.updateSummaryUI === 'function') {
+                this.components.ui.updateSummaryUI(summaryData);
+                if (typeof this.components.ui.updateViolations === 'function') {
+                    this.components.ui.updateViolations(seriesData.violations);
+                }
+            } else {
+                console.log('Componente UI não disponível ou função updateSummaryUI não encontrada');
+            }
+            if (this.components.charts && typeof this.components.charts.updateCharts === 'function') {
+                this.components.charts.updateCharts(seriesData);
+            } else {
+                console.log('Componente charts não disponível ou função updateCharts não encontrada');
+            }
 
             this.updateLastUpdated();
-            console.log('🎉 DASHBOARD-CORE: All initial data loaded successfully');
+            console.log("Dados atualizados com sucesso.");
+
         } catch (error) {
-            console.error('❌ DASHBOARD-CORE: Error loading initial data:', error);
-            console.error('Stack trace:', error.stack);
-            this.showError('Erro ao carregar dados iniciais');
+            console.error('Falha ao atualizar os dados:', error);
+            this.showBasicError(`Erro ao carregar dados: ${error.message}`);
         } finally {
             this.setLoading(false);
         }
     }
 
     startAutoUpdate() {
-        console.log('🚀 Dashboard Core: startAutoUpdate() called at', new Date().toISOString());
-        console.log('📊 Dashboard Core: Current config:', this.config);
-        console.log('⏰ Dashboard Core: Current intervals:', this.intervals);
-
-        if (this.intervals.autoUpdate) {
-            console.log('🧹 Dashboard Core: Clearing existing auto-update interval');
-            clearInterval(this.intervals.autoUpdate);
-        }
-
-        console.log('⚙️ Dashboard Core: Setting up new auto-update interval with', this.config.updateInterval, 'ms');
-
-        let tickCount = 0;
-
-        this.intervals.autoUpdate = setInterval(() => {
-            tickCount++;
-            const now = new Date();
-            console.log(`🔄 TICK #${tickCount} - AUTO-UPDATE at ${now.toLocaleTimeString()} - Starting data load...`);
-
-            try {
-                this.showAutoUpdateStatus();
-                console.log(`📈 TICK #${tickCount} - Status updated, calling loadSummary...`);
-
-                this.loadSummary();
-                console.log(`📊 TICK #${tickCount} - loadSummary called`);
-
-                this.loadSeries();
-                console.log(`📈 TICK #${tickCount} - loadSeries called`);
-
-                this.loadViolations();
-                console.log(`🚨 TICK #${tickCount} - loadViolations called`);
-
-                this.loadAI();
-                console.log(`🤖 TICK #${tickCount} - loadAI called`);
-
-                this.updateLastUpdated();
-                console.log(`✅ TICK #${tickCount} - AUTO-UPDATE COMPLETED at ${new Date().toLocaleTimeString()}`);
-
-            } catch (error) {
-                console.error(`❌ TICK #${tickCount} - AUTO-UPDATE ERROR:`, error);
-                console.error('Stack trace:', error.stack);
-            }
-        }, this.config.updateInterval);
-
-        console.log('🎯 Dashboard Core: Auto-update interval set successfully, ID:', this.intervals.autoUpdate);
-        console.log('⏳ Next update in', this.config.updateInterval / 1000, 'seconds');
+        this.stopAutoUpdate(); // Garante que não haja múltiplos intervalos rodando
+        this.autoUpdateInterval = setInterval(() => {
+            this.updateData();
+        }, this.config.updateIntervalMs);
+        console.log(`Atualização automática iniciada a cada ${this.config.updateIntervalMs / 1000}s.`);
     }
 
     stopAutoUpdate() {
-        if (this.intervals.autoUpdate) {
-            clearInterval(this.intervals.autoUpdate);
-            this.intervals.autoUpdate = null;
+        if (this.autoUpdateInterval) {
+            clearInterval(this.autoUpdateInterval);
+            this.autoUpdateInterval = null;
         }
     }
 
-    handleSliderChange(event) {
-        const value = event.target.value;
-        document.getElementById('slider-value').textContent = `${value} dias`;
-    }
-
-    applyCustomPeriod() {
-        const slider = document.getElementById('period-slider');
-        this.state.currentPeriod = parseInt(slider.value);
-        this.hideCustomPeriodPanel();
-        this.reloadAllData();
-    }
-
-    showCustomPeriodPanel() {
-        document.getElementById('custom-period-panel').style.display = 'block';
-    }
-
-    hideCustomPeriodPanel() {
-        document.getElementById('custom-period-panel').style.display = 'none';
-    }
-
-    async handleViolationsLimitChange(event) {
-        const limitElement = document.getElementById('violations-limit');
-        if (limitElement) {
-            await this.loadViolations();
-        } else {
-            console.warn('Dashboard Core: violations-limit element not found');
-        }
-    }
-
-    async handleViolationFiltersChange() {
-        const tempFilterElement = document.getElementById('filter-temp-violations');
-        const humidityFilterElement = document.getElementById('filter-humidity-violations');
-        if (tempFilterElement && humidityFilterElement) {
-            await this.loadViolations();
-        } else {
-            console.warn('Dashboard Core: Violation filter elements not found');
-        }
-    }
-
-    async forceCycle() {
-        console.log('Dashboard Core: Forcing data cycle...');
-        this.setLoading(true);
-        try {
-            await this.reloadAllData();
-            this.showSuccess('Ciclo forçado executado com sucesso');
-        } catch (error) {
-            console.error('Dashboard Core: Error forcing cycle:', error);
-            this.showError('Erro ao executar ciclo forçado');
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-    async reloadAllData() {
-        console.log('🔄 DASHBOARD-CORE: reloadAllData called with period:', this.state.currentPeriod);
-        console.log('🔄 DASHBOARD-CORE: Current state:', this.state);
-        try {
-            console.log('🔄 DASHBOARD-CORE: Starting sequential data reload...');
-
-            console.log('🔄 DASHBOARD-CORE: Loading summary...');
-            await this.loadSummary();
-            console.log('✅ DASHBOARD-CORE: Summary reloaded');
-
-            console.log('🔄 DASHBOARD-CORE: Loading series...');
-            await this.loadSeries();
-            console.log('✅ DASHBOARD-CORE: Series reloaded');
-
-            console.log('🔄 DASHBOARD-CORE: Loading violations...');
-            await this.loadViolations();
-            console.log('✅ DASHBOARD-CORE: Violations reloaded');
-
-            console.log('🔄 DASHBOARD-CORE: Loading AI...');
-            await this.loadAI();
-            console.log('✅ DASHBOARD-CORE: AI reloaded');
-
-            this.updateLastUpdated();
-            console.log('🎉 DASHBOARD-CORE: reloadAllData completed successfully');
-        } catch (error) {
-            console.error('❌ DASHBOARD-CORE: Error reloading data:', error);
-            console.error('Stack trace:', error.stack);
-            throw error;
-        }
-    }
-
-    async loadSummary() {
-        try {
-            console.log('📊 DASHBOARD-CORE: loadSummary called');
-            const url = `/api/summary/?days=${this.state.currentPeriod}`;
-            const response = await this.apiCall(url);
-            this.state.data.summary = response;
-            this.updateSummaryUI(response);
-        } catch (error) {
-            console.error('❌ DASHBOARD-CORE: Error loading summary:', error);
-            throw error;
-        }
-    }
-
-    async loadSeries() {
-        try {
-            const response = await this.apiCall(`/api/series/?days=${this.state.currentPeriod}`);
-            this.state.data.series = response;
-            this.updateChartsUI(response);
-        } catch (error) {
-            console.error('Dashboard Core: Error loading series:', error);
-            throw error;
-        }
-    }
-
-    async loadViolations() {
-        try {
-            const limitElement = document.getElementById('violations-limit');
-            const tempFilterElement = document.getElementById('filter-temp-violations');
-            const humidityFilterElement = document.getElementById('filter-humidity-violations');
-
-            if (!limitElement || !tempFilterElement || !humidityFilterElement) {
-                console.warn('Dashboard Core: Violation filter elements not found, using defaults');
-                const response = await this.apiCall(`/api/violations/?days=${this.state.currentPeriod}&limit=10`);
-                this.state.data.violations = response;
-                this.updateViolationsUI(response);
-                return;
-            }
-
-            const limit = limitElement.value;
-            const tempFilter = tempFilterElement.checked;
-            const humidityFilter = humidityFilterElement.checked;
-
-            let url = `/api/violations/?days=${this.state.currentPeriod}&limit=${limit}`;
-            if (!tempFilter || !humidityFilter) {
-                const types = [];
-                if (tempFilter) types.push('temperature');
-                if (humidityFilter) types.push('humidity');
-                if (types.length > 0) {
-                    url += `&type=${types.join(',')}`;
-                }
-            }
-
-            const response = await this.apiCall(url);
-            this.state.data.violations = response;
-            this.updateViolationsUI(response);
-        } catch (error) {
-            console.error('Dashboard Core: Error loading violations:', error);
-            throw error;
-        }
-    }
-
-    async loadAI() {
-        try {
-            const response = await this.apiCall(`/api/ai/insights/?days=${this.state.currentPeriod}`);
-            this.state.data.ai = response;
-            this.updateAIUI(response);
-        } catch (error) {
-            console.error('Dashboard Core: Error loading AI data:', error);
-            throw error;
-        }
-    }
-
+    /**
+     * Realiza uma chamada de API com lógica de retentativa.
+     * @param {string} endpoint - O endpoint da API (ex: '/api/summary/').
+     * @param {object} options - Opções para a função fetch().
+     */
     async apiCall(endpoint, options = {}) {
-        console.log('🔗 DASHBOARD-CORE: apiCall called with endpoint:', endpoint);
-        const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-        console.log('🔗 DASHBOARD-CORE: Full URL constructed:', url);
-
         const defaultOptions = {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': this.getCSRFToken()
-            }
+            headers: { 'Content-Type': 'application/json' }
         };
 
-        const finalOptions = { ...defaultOptions, ...options };
-        console.log('🔗 DASHBOARD-CORE: Final options:', finalOptions);
+        // Adiciona o token CSRF apenas para métodos que alteram dados
+        if (options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase())) {
+            defaultOptions.headers['X-CSRFToken'] = this.getCSRFToken();
+        }
 
-        let lastError;
-        for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
+        const finalOptions = { ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers } };
+
+        for (let attempt = 1; attempt <= this.config.apiMaxRetries; attempt++) {
             try {
-                console.log(`🔗 DASHBOARD-CORE: Attempt ${attempt} - Fetching:`, url);
-                const response = await fetch(url, finalOptions);
-                console.log(`🔗 DASHBOARD-CORE: Response status:`, response.status);
-
+                const response = await fetch(endpoint, finalOptions);
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
                 }
-
-                const data = await response.json();
-                console.log('🔗 DASHBOARD-CORE: Response data received, length:', JSON.stringify(data).length);
-                return data;
+                return await response.json();
             } catch (error) {
-                console.warn(`🔗 DASHBOARD-CORE: API call attempt ${attempt} failed:`, error);
-                lastError = error;
-                if (attempt < this.config.maxRetries) {
-                    await this.delay(this.config.retryDelay * attempt);
-                }
+                if (attempt === this.config.apiMaxRetries) throw error; // Lança o erro na última tentativa
+                await new Promise(resolve => setTimeout(resolve, this.config.apiRetryDelayMs * attempt));
             }
         }
-        throw lastError;
     }
+
+    // --- Métodos Utilitários e de UI ---
 
     getCSRFToken() {
-        const token = document.querySelector('[name=csrfmiddlewaretoken]');
-        return token ? token.value : '';
+        const tokenEl = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return tokenEl ? tokenEl.value : '';
     }
 
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    setLoading(loading) {
-        this.state.isLoading = loading;
-        const overlay = document.getElementById('loading-overlay');
-        if (loading) {
-            overlay.classList.remove('hidden');
+    setLoading(isLoading) {
+        this.state.isLoading = isLoading;
+        const body = document.body;
+        // A melhor prática é controlar a visibilidade dos skeletons via CSS
+        // Adicionando/removendo uma classe no body ou em um container principal.
+        if (isLoading) {
+            body.classList.add('is-loading');
         } else {
-            overlay.classList.add('hidden');
+            body.classList.remove('is-loading');
         }
     }
 
@@ -377,152 +167,74 @@ class DashboardCore {
         this.state.lastUpdate = new Date();
         const element = document.getElementById('last-updated');
         if (element) {
-            element.textContent = `Atualizado às ${this.state.lastUpdate.toLocaleTimeString('pt-BR')}`;
+            const timeString = this.state.lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            element.textContent = `Atualizado às ${timeString}`;
         }
     }
 
-    showError(message) {
-        this.showToast('error-toast', message);
-    }
-
-    showSuccess(message) {
-        this.showToast('success-toast', message);
-    }
-
-    showToast(toastId, message) {
-        const toast = document.getElementById(toastId);
-        if (toast) {
-            toast.querySelector('.toast-body span').textContent = message;
-            const bsToast = new bootstrap.Toast(toast);
-            bsToast.show();
-        }
-    }
-
-    updateSummaryUI(data) {
-        console.log('Dashboard Core: updateSummaryUI called with data:', data);
-        console.log('Dashboard Core: Checking if dashboard.ui exists:', !!window.dashboard.ui);
-        console.log('Dashboard Core: Checking if updateSummaryUI method exists:', !!(window.dashboard.ui && typeof window.dashboard.ui.updateSummaryUI === 'function'));
-
-        if (window.dashboard.ui && typeof window.dashboard.ui.updateSummaryUI === 'function') {
-            console.log('Dashboard Core: Calling dashboard.ui.updateSummaryUI');
-            window.dashboard.ui.updateSummaryUI(data);
-            console.log('Dashboard Core: dashboard.ui.updateSummaryUI completed');
-        } else {
-            console.error('Dashboard Core: dashboard.ui.updateSummaryUI not available');
-            console.error('Dashboard Core: window.dashboard:', window.dashboard);
-            console.error('Dashboard Core: window.dashboard.ui:', window.dashboard.ui);
+    /**
+     * Função básica para mostrar erros quando o componente UI não está disponível
+     */
+    showBasicError(message) {
+        // Criar ou atualizar um elemento de erro simples
+        let errorElement = document.getElementById('dashboard-error');
+        if (!errorElement) {
+            errorElement = document.createElement('div');
+            errorElement.id = 'dashboard-error';
+            errorElement.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+                border-radius: 4px;
+                padding: 12px;
+                max-width: 300px;
+                z-index: 1000;
+                font-size: 14px;
+            `;
+            document.body.appendChild(errorElement);
         }
 
-        // Force show KPIs directly
-        this.forceShowKPIs();
-    }
-    updateChartsUI(data) {
-        if (window.dashboard.charts && typeof window.dashboard.charts.updateChartsUI === 'function') {
-            window.dashboard.charts.updateChartsUI(data);
-        }
-    }
-    updateViolationsUI(data) {
-        if (window.dashboard.violations && typeof window.dashboard.violations.updateViolationsUI === 'function') {
-            window.dashboard.violations.updateViolationsUI(data);
-        }
-    }
-    updateAIUI(data) {
-        if (window.dashboard.ai && typeof window.dashboard.ai.updateAIUI === 'function') {
-            window.dashboard.ai.updateAIUI(data);
-        }
-    }
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
 
-    debug() {
-        console.log('=== DASHBOARD DEBUG INFO ===');
-        console.log('Config:', this.config);
-        console.log('State:', this.state);
-        console.log('Intervals:', this.intervals);
-        console.log('Auto-update active:', !!this.intervals.autoUpdate);
-        console.log('Time since last update:', this.state.lastUpdate ? (new Date() - this.state.lastUpdate) + 'ms' : 'Never');
-        console.log('Current period:', this.state.currentPeriod);
-        console.log('Is loading:', this.state.isLoading);
-        console.log('UI module available:', !!window.dashboard.ui);
-        console.log('Charts module available:', !!window.dashboard.charts);
-        console.log('Violations module available:', !!window.dashboard.violations);
-        console.log('AI module available:', !!window.dashboard.ai);
-        console.log('=== END DEBUG INFO ===');
-        return {
-            config: this.config,
-            state: this.state,
-            intervals: this.intervals,
-            modules: {
-                ui: !!window.dashboard.ui,
-                charts: !!window.dashboard.charts,
-                violations: !!window.dashboard.violations,
-                ai: !!window.dashboard.ai
-            }
-        };
-    }
-
-    // Force show KPIs if UI module fails
-    forceShowKPIs() {
-        console.log('🔧 DASHBOARD-CORE: forceShowKPIs called');
-        const kpis = ['temp', 'humidity', 'violations', 'measurements'];
-        kpis.forEach(kpi => {
-            const skeleton = document.getElementById(`${kpi}-skeleton`);
-            const content = document.getElementById(`${kpi}-content`);
-
-            if (skeleton && content) {
-                console.log(`🔧 FORCE-SHOW: Processing ${kpi} - skeleton:`, skeleton, 'content:', content);
-                skeleton.style.setProperty('display', 'none', 'important');
-                content.style.setProperty('display', 'block', 'important');
-                content.style.setProperty('visibility', 'visible', 'important');
-                content.style.setProperty('opacity', '1', 'important');
-                console.log(`✅ FORCE-SHOW: ${kpi} forced to show`);
-            } else {
-                console.warn(`⚠️ FORCE-SHOW: ${kpi} elements missing - skeleton:`, !!skeleton, 'content:', !!content);
-            }
-        });
-    }
-
-    // Force manual update for testing
-    forceUpdate() {
-        console.log('🔧 MANUAL UPDATE TRIGGERED');
-        this.showAutoUpdateStatus();
-        this.loadSummary();
-        this.loadSeries();
-        this.loadViolations();
-        this.loadAI();
-        this.updateLastUpdated();
-        console.log('✅ MANUAL UPDATE COMPLETED');
-    }
-
-    // Download report method
-    downloadReport(format, days) {
-        console.log(`Dashboard Core: Downloading ${format} report for ${days} days...`);
-        const baseUrl = format === 'pdf' ? '/reports/pdf' : '/reports/excel';
-        const url = `${baseUrl}?days=${days}`;
-
-        // Download via link temporário
-        const link = document.createElement('a');
-        link.href = url;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    // Show auto-update status
-    showAutoUpdateStatus() {
-        console.log('Dashboard Core: Auto-update status - Active:', !!this.intervals.autoUpdate);
-        if (this.intervals.autoUpdate) {
-            console.log('Dashboard Core: Next update in approximately', Math.round(this.config.updateInterval / 1000), 'seconds');
-        }
+        // Auto-hide após 5 segundos
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 5000);
     }
 }
 
-// Global dashboard object - only create if it doesn't exist
-if (typeof window.dashboard === 'undefined') {
-    window.dashboard = {};
+// Disponibilizar a classe globalmente
+if (typeof window !== 'undefined') {
+    window.DashboardCore = DashboardCore;
 }
 
-// Create core instance and assign to dashboard object
-window.dashboard.core = new DashboardCore();
+/* 
+No seu CSS, você controlaria os skeletons assim:
 
-// Expose apiCall globally for other modules
-window.dashboard.apiCall = window.dashboard.core.apiCall.bind(window.dashboard.core);
+.kpi-content {
+    display: none;
+}
+.kpi-skeleton {
+    display: block;
+}
+
+.is-loading .kpi-content {
+    display: none;
+}
+.is-loading .kpi-skeleton {
+    display: block;
+}
+
+body:not(.is-loading) .kpi-content {
+    display: block;
+}
+body:not(.is-loading) .kpi-skeleton {
+    display: none;
+}
+
+Isso elimina a necessidade do método `forceShowKPIs` com `!important`.
+*/

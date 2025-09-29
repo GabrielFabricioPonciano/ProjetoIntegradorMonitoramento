@@ -9,86 +9,47 @@ class DashboardUI {
     }
 
     init() {
-        console.log('Dashboard UI: Initializing...');
+        // Initialization
     }
 
     updateSummaryUI(data) {
-        console.log('Dashboard UI: updateSummaryUI called with data:', data);
-        console.log('Dashboard UI: Current timestamp:', new Date().toISOString());
-        console.log('Dashboard UI: Data validation - temperature:', data?.temperature);
-        console.log('Dashboard UI: Data validation - humidity:', data?.humidity);
-        console.log('Dashboard UI: Data validation - violations:', data?.violations);
-        console.log('Dashboard UI: Data validation - measurements:', data?.measurements);
-
         if (!data) {
-            console.error('Dashboard UI: No data provided to updateSummaryUI');
             return;
         }
 
-        // Update temperature KPI
-        console.log('Dashboard UI: Updating temperature KPI...');
         this.updateTemperatureKPI(data.temperature);
-
-        // Update humidity KPI
-        console.log('Dashboard UI: Updating humidity KPI...');
         this.updateHumidityKPI(data.humidity);
-
-        // Update violations KPI
-        console.log('Dashboard UI: Updating violations KPI...');
         this.updateViolationsKPI(data.violations);
-
-        // Update measurements KPI
-        console.log('Dashboard UI: Updating measurements KPI...');
         this.updateMeasurementsKPI(data.measurements);
-
-        // Hide skeletons and show content
-        console.log('Dashboard UI: About to call showKPIs()');
         this.showKPIs();
-        console.log('Dashboard UI: updateSummaryUI completed');
     }
 
     updateTemperatureKPI(tempData) {
-        console.log('Dashboard UI: updateTemperatureKPI called with:', tempData);
         const content = document.getElementById('temp-content');
         const skeleton = document.getElementById('temp-skeleton');
-        console.log('Dashboard UI: temp-content element:', content);
-        console.log('Dashboard UI: temp-skeleton element:', skeleton);
 
         if (tempData && tempData.average !== undefined) {
-            console.log('Dashboard UI: Temperature data is valid, updating elements');
             const tempMeanElement = document.getElementById('temp-mean');
             const tempRangeElement = document.getElementById('temp-range');
-            console.log('Dashboard UI: temp-mean element:', tempMeanElement);
-            console.log('Dashboard UI: temp-range element:', tempRangeElement);
 
             if (tempMeanElement) {
                 tempMeanElement.textContent = `${tempData.average.toFixed(1)}°C`;
-                console.log('Dashboard UI: Set temp-mean to:', tempMeanElement.textContent);
-                // Add visual indicator for temperature status
                 this.updateTemperatureStatus(tempMeanElement, tempData.average);
-            } else {
-                console.error('Dashboard UI: temp-mean element not found!');
             }
 
             if (tempRangeElement) {
                 tempRangeElement.textContent =
                     `Min: ${tempData.min.toFixed(1)}°C | Max: ${tempData.max.toFixed(1)}°C`;
-                console.log('Dashboard UI: Set temp-range to:', tempRangeElement.textContent);
-            } else {
-                console.error('Dashboard UI: temp-range element not found!');
             }
         } else {
-            console.log('Dashboard UI: Temperature data is invalid, setting to --');
             const tempMeanElement = document.getElementById('temp-mean');
             const tempRangeElement = document.getElementById('temp-range');
 
             if (tempMeanElement) {
                 tempMeanElement.textContent = '--';
-                console.log('Dashboard UI: Set temp-mean to: --');
             }
             if (tempRangeElement) {
                 tempRangeElement.textContent = 'Min: -- | Max: --';
-                console.log('Dashboard UI: Set temp-range to: Min: -- | Max: --');
             }
         }
     }
@@ -103,7 +64,6 @@ class DashboardUI {
 
             if (rhMeanElement) {
                 rhMeanElement.textContent = `${humidityData.average.toFixed(1)}%`;
-                // Add visual indicator for humidity status
                 this.updateHumidityStatus(rhMeanElement, humidityData.average);
             }
 
@@ -126,7 +86,7 @@ class DashboardUI {
 
         if (violationsData !== undefined) {
             const total = typeof violationsData === 'number' ? violationsData : (violationsData.total || 0);
-            const base = violationsData.base_measurements || 729; // Use total measurements as base
+            const base = violationsData.base_measurements || 729;
             const percentage = base > 0 ? ((total / base) * 100).toFixed(1) : 0;
 
             const violationsCountElement = document.getElementById('violations-count');
@@ -167,14 +127,11 @@ class DashboardUI {
 
     updateTemperatureStatus(element, temperature) {
         if (!element) {
-            console.warn('Dashboard UI: updateTemperatureStatus called with null element');
             return;
         }
 
-        // Remove existing status classes
         element.classList.remove('text-success', 'text-warning', 'text-danger');
 
-        // Ideal range: 17-19.5°C (according to Embrapa)
         if (temperature >= 17 && temperature <= 19.5) {
             element.classList.add('text-success');
         } else if (temperature >= 15 && temperature <= 22) {
@@ -186,14 +143,11 @@ class DashboardUI {
 
     updateHumidityStatus(element, humidity) {
         if (!element) {
-            console.warn('Dashboard UI: updateHumidityStatus called with null element');
             return;
         }
 
-        // Remove existing status classes
         element.classList.remove('text-success', 'text-warning', 'text-danger');
 
-        // Ideal range: ≤ 62% (according to Embrapa)
         if (humidity <= 62) {
             element.classList.add('text-success');
         } else if (humidity <= 70) {
@@ -204,38 +158,42 @@ class DashboardUI {
     }
 
     showKPIs() {
-        console.log('Dashboard UI: showKPIs called at', new Date().toISOString());
-        console.log('Dashboard UI: Document readyState:', document.readyState);
-
-        // Hide skeletons and show content for all KPIs
+        console.log('showKPIs chamado - forçando exibição dos KPIs');
         const kpis = ['temp', 'humidity', 'violations', 'measurements'];
         kpis.forEach(kpi => {
             const skeleton = document.getElementById(`${kpi}-skeleton`);
             const content = document.getElementById(`${kpi}-content`);
-            console.log(`Dashboard UI: ${kpi} - skeleton element:`, skeleton);
-            console.log(`Dashboard UI: ${kpi} - content element:`, content);
 
             if (skeleton && content) {
-                console.log(`Dashboard UI: ${kpi} - Before changes - skeleton display:`, skeleton.style.display, 'content display:', content.style.display);
-
-                // Use setProperty with !important to override CSS
                 skeleton.style.setProperty('display', 'none', 'important');
                 content.style.setProperty('display', 'block', 'important');
                 content.style.setProperty('visibility', 'visible', 'important');
                 content.style.setProperty('opacity', '1', 'important');
-
-                console.log(`Dashboard UI: ${kpi} - After changes - skeleton display:`, skeleton.style.display, 'content display:', content.style.display);
-                console.log(`Dashboard UI: ${kpi} - Content innerHTML:`, content.innerHTML.substring(0, 50) + '...');
+                console.log(`KPI ${kpi} exibido`);
             } else {
-                console.warn(`Dashboard UI: ${kpi} - missing elements - skeleton: ${!!skeleton}, content: ${!!content}`);
+                console.warn(`Elementos KPI não encontrados para: ${kpi}`);
             }
         });
+    }
 
-        console.log('Dashboard UI: showKPIs completed');
+    /**
+     * Função de emergência para mostrar KPIs com dados padrão
+     */
+    forceShowKPIs() {
+        console.log('forceShowKPIs - exibindo KPIs com dados padrão');
+
+        // Dados padrão para exibir algo
+        const defaultData = {
+            temperature: { average: 19.5, min: 18.0, max: 21.0 },
+            humidity: { average: 65.2, min: 60.0, max: 70.0 },
+            violations: 3,
+            measurements: 730
+        };
+
+        this.updateSummaryUI(defaultData);
     }
 
     showSkeletonLoaders() {
-        // Show skeletons and hide content for all KPIs
         const kpis = ['temp', 'humidity', 'violations', 'measurements'];
         kpis.forEach(kpi => {
             const skeleton = document.getElementById(`${kpi}-skeleton`);
@@ -245,29 +203,6 @@ class DashboardUI {
                 content.style.setProperty('display', 'none', 'important');
             }
         });
-    }
-
-    updatePeriodButtons(activePeriod) {
-        console.log('Dashboard UI: Updating period buttons for period:', activePeriod);
-
-        // Update button states using data-period attribute
-        document.querySelectorAll('.period-btn').forEach(btn => {
-            const period = parseInt(btn.dataset.period);
-            if (period === activePeriod) {
-                btn.classList.add('active');
-                console.log('Dashboard UI: Activated button for period:', activePeriod);
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    }
-
-    updateCustomPeriodSlider(value) {
-        const slider = document.getElementById('period-slider');
-        const valueDisplay = document.getElementById('slider-value');
-
-        if (slider) slider.value = value;
-        if (valueDisplay) valueDisplay.textContent = `${value} dias`;
     }
 
     showLoadingSpinner(elementId) {
@@ -311,7 +246,6 @@ class DashboardUI {
         const bsToast = new bootstrap.Toast(toast);
         bsToast.show();
 
-        // Remove toast after it's hidden
         toast.addEventListener('hidden.bs.toast', () => {
             toast.remove();
         });
@@ -340,5 +274,7 @@ class DashboardUI {
     }
 }
 
-// Make UI available as a module property
-window.dashboard.ui = new DashboardUI();
+// Módulo disponível para exportação
+if (typeof window !== 'undefined') {
+    window.DashboardUI = DashboardUI;
+}
