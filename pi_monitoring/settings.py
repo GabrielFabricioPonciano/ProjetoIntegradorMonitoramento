@@ -18,6 +18,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "django_celery_beat",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -57,36 +59,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
-# ===== CONFIGURAÇÕES DE CACHE (REDIS) =====
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutos padrão
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
-            'CULL_FREQUENCY': 3,
-        }
-    }
-}
-
-# Configuração Redis (descomentado quando Redis estiver disponível)
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': 'redis://127.0.0.1:6379/1',
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#         },
-#         'KEY_PREFIX': 'pi_monitoring',
-#         'TIMEOUT': 300,  # 5 minutos padrão
-#     }
-# }
-
-# Cache de sessões (opcional - descomente se precisar)
-# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-# SESSION_CACHE_ALIAS = 'default'
 
 # ===== CONFIGURAÇÕES DE BACKUP =====
 BACKUP_DIR = BASE_DIR / 'backups'
@@ -139,6 +111,38 @@ SIM_DAILY_TIMES = ["07:30", "16:30"]
 # Número de dias para manter no banco (rolling window)
 # Padrão: 365 dias (com 2 medições/dia = 730 registros máximo)
 SIM_TARGET_DAYS = 365
+
+# ===== CONFIGURAÇÕES DO CELERY =====
+# Celery Configuration Options
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Configurações do Celery Beat (scheduler)
+from celery.schedules import crontab  # type: ignore
+
+CELERY_BEAT_SCHEDULE = {
+    'simulate-environmental-data': {
+        'task': 'monitoring.tasks.simulate_environmental_data',
+        'schedule': crontab(minute='*/5'),  # A cada 5 minutos
+    },
+    'generate-daily-report': {
+        'task': 'monitoring.tasks.generate_daily_report',
+        'schedule': crontab(hour='6', minute='0'),  # Todos os dias às 6:00
+    },
+    'cleanup-old-data': {
+        'task': 'monitoring.tasks.cleanup_old_data',
+        'schedule': crontab(hour='2', minute='0'),  # Todos os dias às 2:00
+    },
+    'backup-database': {
+        'task': 'monitoring.tasks.backup_database',
+        'schedule': crontab(hour='3', minute='0'),  # Todos os dias às 3:00
+    },
+}
 
 # Configuração de logging para o simulador
 LOGGING = {

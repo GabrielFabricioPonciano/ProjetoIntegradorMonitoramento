@@ -140,3 +140,16 @@ staticfiles/
 # Database backups
 *.sql
 *.dump
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+*.tmp
+*.temp

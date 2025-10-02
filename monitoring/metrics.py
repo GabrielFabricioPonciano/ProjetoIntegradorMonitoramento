@@ -191,24 +191,6 @@ class DjangoMetrics:
     """Coletor de métricas específicas do Django."""
     
     @staticmethod
-    def get_cache_metrics() -> Dict[str, Any]:
-        """Obtém métricas do sistema de cache."""
-        try:
-            # Testar conectividade do cache
-            test_key = 'metrics_test'
-            cache.set(test_key, 'test_value', 1)
-            cache_working = cache.get(test_key) == 'test_value'
-            cache.delete(test_key)
-            
-            return {
-                'cache_working': cache_working,
-                'cache_backend': settings.CACHES['default']['BACKEND'],
-            }
-        except Exception as e:
-            logger.error(f"Erro ao obter métricas do cache: {e}")
-            return {'cache_working': False}
-    
-    @staticmethod
     def get_application_metrics() -> Dict[str, Any]:
         """Obtém métricas da aplicação."""
         try:
@@ -254,7 +236,6 @@ class MetricsCollector:
         metrics.update(self.database_metrics.get_table_metrics())
         
         # Coletar métricas do Django
-        metrics.update(self.django_metrics.get_cache_metrics())
         metrics.update(self.django_metrics.get_application_metrics())
         
         # Calcular tempo de coleta
@@ -270,7 +251,6 @@ class MetricsCollector:
             memory_metrics = self.system_metrics.get_memory_metrics()
             disk_metrics = self.system_metrics.get_disk_metrics()
             db_metrics = self.database_metrics.get_connection_metrics()
-            cache_metrics = self.django_metrics.get_cache_metrics()
             
             return {
                 'timestamp': datetime.now().isoformat(),
@@ -279,7 +259,6 @@ class MetricsCollector:
                 'memory_percent': memory_metrics.get('memory_percent', 0),
                 'disk_percent': disk_metrics.get('disk_percent', 0),
                 'db_connections': db_metrics.get('db_active_connections', 0),
-                'cache_working': cache_metrics.get('cache_working', False),
             }
         except Exception as e:
             logger.error(f"Erro na coleta de resumo: {e}")
@@ -321,12 +300,6 @@ class MetricsCollector:
                 status = 'warning'
             elif disk_percent > 95:
                 status = 'critical'
-            
-            # Verificar cache
-            if not summary.get('cache_working', False):
-                issues.append("Cache não está funcionando")
-                if status == 'healthy':
-                    status = 'warning'
             
             return {
                 'status': status,

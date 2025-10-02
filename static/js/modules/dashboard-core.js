@@ -183,16 +183,18 @@ class DashboardCore {
         try {
             console.log('🌐 Fazendo chamadas à API...');
             // Executa as chamadas de API em paralelo para maior performance
-            const [summaryData, seriesData] = await Promise.all([
+            const [summaryData, seriesData, violationsData] = await Promise.all([
                 this.apiCall(`/api/summary/`), // Sem filtro para pegar todos os dados
-                this.apiCall(`/api/series/?max_points=100`) // Sem filtro para pegar todos os dados
+                this.apiCall(`/api/series/?max_points=100`), // Sem filtro para pegar todos os dados
+                this.apiCall(`/api/violations/?limit=10`) // Últimas 10 violações
             ]);
 
             console.log('✅ Dados recebidos - summary:', summaryData);
             console.log('✅ Dados recebidos - series length:', Array.isArray(seriesData) ? seriesData.length : 'não é array');
+            console.log('✅ Dados recebidos - violations length:', Array.isArray(violationsData) ? violationsData.length : 'não é array');
 
             // Processar dados diretamente
-            this.processData(summaryData, seriesData);
+            this.processData(summaryData, seriesData, violationsData);
 
             if (timerId) {
                 this.performanceMonitor.endTimer(timerId, { success: true, cached: false });
@@ -248,7 +250,8 @@ class DashboardCore {
     /**
      * Processa os dados e notifica componentes.
      */
-    processData(summaryData, seriesData) {
+    processData(summaryData, seriesData, violationsData) {
+        console.log('🔄 processData called with violationsData:', violationsData);
         try {
             console.log('🔄 processData() iniciado');
             console.log('📊 Summary data recebido:', summaryData);
@@ -262,7 +265,10 @@ class DashboardCore {
                 console.log('🎨 Atualizando interface com dados transformados');
                 this.components.ui.updateSummaryUI(transformedData);
                 if (typeof this.components.ui.updateViolations === 'function') {
-                    this.components.ui.updateViolations(seriesData.violations || []);
+                    console.log('📋 Chamando updateViolations com dados:', violationsData);
+                    this.components.ui.updateViolations(violationsData);
+                } else {
+                    console.warn('⚠️ Método updateViolations não encontrado no componente UI');
                 }
             } else {
                 console.warn('⚠️ Componente UI não disponível ou função updateSummaryUI não encontrada');

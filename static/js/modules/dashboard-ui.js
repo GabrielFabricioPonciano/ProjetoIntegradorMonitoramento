@@ -4,7 +4,9 @@
  */
 
 class DashboardUI {
-    constructor() {
+    constructor(config = null, errorHandler = null) {
+        this.config = config;
+        this.errorHandler = errorHandler;
         this.init();
     }
 
@@ -23,6 +25,57 @@ class DashboardUI {
         this.updateViolationsKPI(data.violations);
         this.updateMeasurementsKPI(data.measurements);
         this.showKPIs();
+    }
+
+    updateViolations(violationsData) {
+        console.log('📋 updateViolations chamado com dados:', violationsData);
+        const container = document.getElementById('violations-list');
+        console.log('📋 Container encontrado:', container);
+        if (!container) {
+            console.warn('Container de violações não encontrado');
+            return;
+        }
+
+        if (!Array.isArray(violationsData) || violationsData.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle text-success mb-2" style="font-size: 2rem;"></i>
+                    <p class="text-muted mb-0">Nenhuma violação recente detectada</p>
+                </div>
+            `;
+            return;
+        }
+
+        const violationsHTML = violationsData.map(violation => {
+            const timestamp = new Date(violation.timestamp);
+            const timeString = timestamp.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            return `
+                <div class="violation-item">
+                    <div class="violation-header">
+                        <span class="violation-time">${timeString}</span>
+                        <span class="violation-type">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </span>
+                    </div>
+                    <div class="violation-details">
+                        <div class="violation-values">
+                            <span class="temp-value">${violation.temperature?.toFixed(1) || '--'}°C</span>
+                            <span class="humidity-value">${violation.relative_humidity?.toFixed(1) || '--'}%</span>
+                        </div>
+                        <div class="violation-reason">${violation.reason || 'Violação detectada'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = violationsHTML;
     }
 
     updateTemperatureKPI(tempData) {

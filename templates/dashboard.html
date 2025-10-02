@@ -318,6 +318,8 @@
         aspect-ratio: 1;
     }
 
+    /* Note: chart card styles are defined later in the file; duplicate simple definitions removed to avoid selector duplication. */
+
     .kpi-card::before {
         content: '';
         position: absolute;
@@ -475,7 +477,9 @@
         box-shadow: var(--shadow-glass);
         transition: all var(--transition-normal);
         position: relative;
-        overflow: hidden;
+        /* allow expand button to be visible outside card edges */
+        overflow: visible;
+        padding-top: calc(var(--spacing-xl) + 6px);
     }
 
     .chart-card::before {
@@ -730,6 +734,150 @@
         }
     }
 
+    /* ---------- 11. SEÇÃO DE VIOLAÇÕES ---------- */
+    .violations-section {
+        animation: fadeInUp 1.6s ease-out;
+    }
+
+    .violations-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl);
+        box-shadow: var(--shadow-glass);
+        transition: all var(--transition-normal);
+        position: relative;
+        /* allow the expand button to be visible and avoid clipping */
+        overflow: visible;
+        /* small inset so expand button doesn't visually collide with card edges */
+        padding-top: calc(var(--spacing-md) + 0.25rem);
+        padding-right: calc(var(--spacing-md) + 0.25rem);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .violations-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.03),
+                transparent);
+        transition: left 0.6s ease-in-out;
+        pointer-events: none;
+    }
+
+    .violations-card:hover::before {
+        left: 100%;
+    }
+
+    .violations-card:hover {
+        background: var(--bg-glass-hover);
+        box-shadow: var(--shadow-glass-hover);
+        transform: translateY(-4px);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .violations-list {
+        max-height: 400px;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-md);
+    }
+
+    .violation-item {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+        transition: var(--transition-normal);
+    }
+
+    .violation-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .violation-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .violation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .violation-time {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .violation-type {
+        color: var(--kpi-violations);
+        font-size: 1rem;
+    }
+
+    .violation-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .violation-values {
+        display: flex;
+        gap: var(--spacing-lg);
+        font-size: 0.875rem;
+    }
+
+    .temp-value {
+        color: var(--kpi-temp);
+        font-weight: 600;
+    }
+
+    .humidity-value {
+        color: var(--kpi-humidity);
+        font-weight: 600;
+    }
+
+    .violation-reason {
+        flex: 1;
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        text-align: right;
+    }
+
+    /* Scrollbar customizado para a lista de violações */
+    .violations-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .violations-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-sm);
+    }
+
+    .violations-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: var(--radius-sm);
+    }
+
+    .violations-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
     /* ---------- UTILITÁRIOS TAILWIND EQUIVALENTES ---------- */
     .text-white {
         color: var(--text-primary);
@@ -825,30 +973,46 @@
         animation: fadeInUp 0.6s ease-out;
     }
 
-    /* ---------- MODAL FULLSCREEN PARA GRÁFICOS ---------- */
+
+    /* ---------- MODAL FULLSCREEN PARA GRÁFICOS (AJUSTADO) ---------- */
     .chart-fullscreen-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.95);
-        backdrop-filter: blur(10px);
-        z-index: 9999;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: var(--spacing-xl);
+        /* Use inset para garantir cobertura completa e evitar cálculos estranhos */
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        z-index: 10000 !important;
+        display: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: var(--spacing-xl) !important;
+        box-sizing: border-box !important;
     }
 
     .chart-fullscreen-modal.active {
-        display: flex;
-        animation: fadeIn 0.3s ease-out;
+        display: flex !important;
+        animation: fadeIn 0.3s ease-out !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        z-index: 10000 !important;
+    }
+
+    /* Garante que o conteúdo do modal tenha dimensões limitadas ao viewport */
+    .chart-fullscreen-modal.active .chart-fullscreen-content {
+        width: min(1400px, 90%) !important;
+        /* Define uma altura explícita baseada no viewport para que os filhos em flex
+           possam calcular corretamente (evita crescimento infinito do canvas) */
+        height: calc(100vh - (var(--spacing-xl) * 2)) !important;
+        max-height: calc(100vh - (var(--spacing-xl) * 2)) !important;
     }
 
     .chart-fullscreen-content {
-        width: 90%;
-        height: 80%;
+        width: 100%;
         max-width: 1400px;
         background: var(--bg-glass);
         backdrop-filter: blur(20px);
@@ -859,6 +1023,10 @@
         flex-direction: column;
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
         position: relative;
+        /* Crucial: allow flex children to size correctly (avoid growth to huge heights) */
+        min-height: 0;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
     .chart-fullscreen-header {
@@ -929,22 +1097,317 @@
     }
 
     .chart-fullscreen-canvas {
-        flex: 1;
+        flex: 1 1 auto;
         position: relative;
         background: rgba(255, 255, 255, 0.03);
         border-radius: var(--radius-lg);
         padding: var(--spacing-md);
+        /* Allow proper flexbox clipping */
+        min-height: 0;
+        overflow: hidden;
     }
 
+    /* Force canvas to fit its container while avoiding strange intrinsic sizing issues */
     .chart-fullscreen-canvas canvas {
+        display: block;
         width: 100% !important;
         height: 100% !important;
+        max-height: 100% !important;
+        box-sizing: border-box;
     }
 
+    /* Additional safeguard: limit absolute maximum height to avoid extreme values
+       coming from inline canvas attributes (Chart.js buffer sizing). */
+    .chart-fullscreen-canvas,
+    .chart-fullscreen-canvas canvas {
+        max-height: calc(100vh - 160px) !important;
+    }
+
+    /* ---------- ESTILOS PARA VIOLAÇÕES FULLSCREEN - REFATORADO ---------- */
+    /* Make the violations container visually integrate with the modal's content
+       (avoid nested card-in-card look). Keep layout but remove inner background/border. */
+    .violations-fullscreen-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: transparent;
+        /* inherit outer glass background */
+        border-radius: inherit;
+        overflow: hidden;
+        padding: 0;
+        /* let header/list control spacing */
+        box-shadow: none;
+        border: none;
+    }
+
+    .violations-fullscreen-header {
+        padding: calc(var(--spacing-lg) - 4px) var(--spacing-lg);
+        background: transparent;
+        /* match outer header style */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        flex-shrink: 0;
+    }
+
+    .violations-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--spacing-lg);
+        justify-content: center;
+        align-items: stretch;
+    }
+
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.08);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: var(--transition-normal);
+    }
+
+    .stat-item:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: var(--spacing-sm);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1;
+    }
+
+    .violations-fullscreen-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--spacing-lg);
+        background: transparent;
+        /* let outer container show through */
+        border-radius: 0 0 inherit inherit;
+    }
+
+    .violation-fullscreen-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: calc(var(--radius-md));
+        padding: calc(var(--spacing-md));
+        margin-bottom: calc(var(--spacing-md));
+        transition: var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .violation-fullscreen-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .violation-fullscreen-item:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Barra lateral indicando tipo de violação */
+    .violation-fullscreen-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--kpi-violations);
+        border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    }
+
+    .violation-fullscreen-item.temp-violation::before {
+        background: var(--kpi-temp);
+    }
+
+    .violation-fullscreen-item.humidity-violation::before {
+        background: var(--kpi-humidity);
+    }
+
+    .violation-fullscreen-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .violation-fullscreen-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .violation-fullscreen-time {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-top: var(--spacing-xs);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .violation-fullscreen-alert {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(245, 158, 11, 0.1);
+        border: 2px solid rgba(245, 158, 11, 0.3);
+        color: var(--kpi-violations);
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .violation-fullscreen-alert.temp {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: var(--kpi-temp);
+    }
+
+    .violation-fullscreen-alert.humidity {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: var(--kpi-humidity);
+    }
+
+    .violation-fullscreen-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-lg);
+        align-items: start;
+    }
+
+    .violation-metrics {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .metric-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        transition: var(--transition-normal);
+    }
+
+    .metric-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .metric-card.violated {
+        background: rgba(245, 158, 11, 0.05);
+        border-color: rgba(245, 158, 11, 0.2);
+        box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.1);
+    }
+
+    .metric-card.violated.temp {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: rgba(239, 68, 68, 0.2);
+        box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1);
+    }
+
+    .metric-card.violated.humidity {
+        background: rgba(59, 130, 246, 0.05);
+        border-color: rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
+    }
+
+    .metric-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: var(--spacing-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .metric-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .metric-limit {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .violation-description {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        border-left: 4px solid var(--kpi-violations);
+    }
+
+    .violation-description.temp {
+        border-left-color: var(--kpi-temp);
+    }
+
+    .violation-description.humidity {
+        border-left-color: var(--kpi-humidity);
+    }
+
+    /* Scrollbar customizado para fullscreen */
+    .violations-fullscreen-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .violations-fullscreen-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-sm);
+    }
+
+    .violations-fullscreen-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: var(--radius-sm);
+    }
+
+    .violations-fullscreen-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Consolidated expand button styles to ensure a single authoritative definition */
     .chart-expand-btn {
         position: absolute;
-        top: var(--spacing-md);
-        right: var(--spacing-md);
+        top: calc(var(--spacing-md) + 2px) !important;
+        right: calc(var(--spacing-md) + 2px) !important;
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         color: var(--text-primary);
@@ -957,13 +1420,10 @@
         font-size: 0.875rem;
         cursor: pointer;
         transition: var(--transition-normal);
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    .chart-card:hover .chart-expand-btn {
         opacity: 1;
         transform: translateY(0);
+        z-index: 12000 !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
     }
 
     .chart-expand-btn:hover {
@@ -971,14 +1431,9 @@
         transform: scale(1.1);
     }
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
+    /* Body quando modal fullscreen está ativo (evita position:fixed que pode atrapalhar cálculos) */
+    body.modal-active {
+        overflow: hidden !important;
     }
 
     /* Responsividade do Modal Fullscreen */
@@ -1008,6 +1463,26 @@
         .chart-keyboard-hint {
             display: none;
         }
+
+        .violations-stats {
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .violation-fullscreen-content {
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .violation-metrics {
+            flex-direction: row;
+            gap: var(--spacing-sm);
+        }
+
+        .metric-card {
+            flex: 1;
+            min-width: 0;
+        }
     }
 
     @media (max-width: 480px) {
@@ -1020,6 +1495,24 @@
 
         .chart-fullscreen-modal {
             padding: 0;
+        }
+
+        .violation-fullscreen-item {
+            padding: var(--spacing-md);
+        }
+
+        .violation-fullscreen-content {
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .violation-metrics {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .metric-card {
+            width: 100%;
         }
     }
 </style>
@@ -1174,6 +1667,29 @@
         </div>
     </section>
 
+    <!-- ========== ÚLTIMAS VIOLAÇÕES ========== -->
+    <section class="violations-section mb-12">
+        <div class="charts-header text-center mb-8">
+            <h2 class="text-2xl font-bold text-white mb-2">Últimas Violações</h2>
+            <p class="text-slate-300">Medições que excederam os limites ideais</p>
+        </div>
+
+        <div class="violations-card">
+            <button class="chart-expand-btn"
+                onclick="console.log('🎯 Botão fullscreen violações clicado!'); openChartFullscreen('violations')"
+                title="Expandir violações">
+                <i class="fas fa-expand"></i>
+            </button>
+            <div id="violations-list" class="violations-list">
+                <!-- Violações serão inseridas aqui via JavaScript -->
+                <div class="text-center py-4">
+                    <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+                    <p style="color: rgba(255,255,255,0.7); margin: 0;">Carregando violações...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Modal Fullscreen para Gráficos -->
     <div id="chart-fullscreen-modal" class="chart-fullscreen-modal">
         <div class="chart-fullscreen-content">
@@ -1193,7 +1709,7 @@
                     </button>
                 </div>
             </div>
-            <div class="chart-fullscreen-canvas">
+            <div class="chart-fullscreen-canvas" id="fullscreen-chart-container">
                 <canvas id="fullscreen-chart-canvas"></canvas>
             </div>
         </div>

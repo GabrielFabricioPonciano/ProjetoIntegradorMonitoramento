@@ -1,10 +1,25 @@
 /**
- * Dashboard Main Initializer
- * Main entry point that initializes all dashboard modules and starts the application
+ * Dashboard Main Initializer    function initializeDashboard() {
+        console.log('🔄 initializeDashboard called, readyState:', document.readyState);
+
+        // Simple test: try to access basic elements
+        const violationsList = document.getElementById('violations-list');
+        console.log('violations-list element:', violationsList);
+
+        if (document.readyState !== 'complete') {
+            console.log('DOM not complete, waiting...');
+            return;
+        }
+
+        console.log('🚀 Starting dashboard initialization...');entry point that initializes all dashboard modules and starts the application
  */
+
+console.log('🚀 dashboard-init.js loaded');
 
 (function () {
     'use strict';
+
+    console.log('📦 Dashboard init IIFE started');
 
     document.addEventListener('DOMContentLoaded', function () {
         if (document.readyState === 'loading') {
@@ -21,13 +36,23 @@
         }, 100);
     }
 
+    // Fallback: try to initialize after a delay
+    setTimeout(() => {
+        if (!window.dashboard || !window.dashboard.core) {
+            console.log('Fallback initialization triggered');
+            initializeDashboard();
+        }
+    }, 2000);
+
     function initializeDashboard() {
+        console.log('🔄 initializeDashboard called, readyState:', document.readyState);
+
         if (document.readyState !== 'complete') {
-            console.log('DOM not ready, waiting...');
+            console.log('DOM not complete, waiting...');
             return;
         }
 
-        console.log('Initializing dashboard...');
+        console.log('🚀 Starting dashboard initialization...');
 
         // Inicializar objeto dashboard global
         window.dashboard = window.dashboard || {};
@@ -51,13 +76,17 @@
 
             // 3. Instanciar os outros módulos
             const dashboardUI = window.DashboardUI ? new window.DashboardUI(dashboardConfig, errorHandler) : null;
+            console.log('DashboardUI created:', !!dashboardUI);
             const dashboardCharts = window.DashboardCharts ? new window.DashboardCharts(dashboardConfig, errorHandler, performanceMonitor) : null;
             const dashboardData = window.DashboardData ? new window.DashboardData(dashboardConfig, errorHandler) : null;
             const dashboardFullscreen = window.DashboardFullscreen ? new window.DashboardFullscreen(dashboardConfig, errorHandler) : null;
+            console.log('DashboardFullscreen criado:', !!dashboardFullscreen);
+            console.log('window.DashboardFullscreen:', window.DashboardFullscreen);
 
             // 4. Registrar os módulos no Core
             if (dashboardUI) {
                 dashboardCore.registerComponent('ui', dashboardUI);
+                console.log('UI component registered');
             }
             if (dashboardCharts) {
                 dashboardCore.registerComponent('charts', dashboardCharts);
