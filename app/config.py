@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     app_version: str = "2.0.0"
     debug: bool = True
     
-    # Database
-    database_url: str = "postgresql://ultra_user:1234@localhost:5432/pi_monitoring"
+    # Database (SQLite - local file, no external database needed)
+    database_url: str = "sqlite:///data/monitoring.db"
     
     # Server
     host: str = "0.0.0.0"

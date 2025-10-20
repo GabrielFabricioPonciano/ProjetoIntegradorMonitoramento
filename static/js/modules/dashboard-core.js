@@ -446,10 +446,10 @@ class DashboardCore {
 
     updateLastUpdated() {
         this.state.lastUpdate = new Date();
-        const element = document.getElementById('last-updated');
+        const element = document.getElementById('last-update-time');
         if (element) {
             const timeString = this.state.lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            element.textContent = `Atualizado às ${timeString}`;
+            element.textContent = timeString;
         }
     }
 
