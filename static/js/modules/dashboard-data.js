@@ -51,15 +51,23 @@ class DashboardData {
         return data;
     }
 
-    async fetchViolationsHistory(days = 30) {
-        const cacheKey = `violations_history_${days}`;
+    async fetchViolationsHistory(limit = 20, days = null) {
+        const cacheKey = `violations_${limit}_${days}`;
         const cached = this.getCached(cacheKey);
         if (cached) return cached;
 
-        // Use sample data directly since API doesn't exist
-        const data = this.generateSampleHistory(days, 0, 100, true);
-        this.setCached(cacheKey, data);
-        return data;
+        try {
+            let url = `/api/violations/?limit=${limit}`;
+            if (days) {
+                url += `&days=${days}`;
+            }
+            const data = await window.dashboard.apiCall(url);
+            this.setCached(cacheKey, data);
+            return data;
+        } catch (error) {
+            console.error('Dashboard Data: Error fetching violations:', error);
+            throw error;
+        }
     }
 
     generateSampleHistory(count, min, max, integers = false) {

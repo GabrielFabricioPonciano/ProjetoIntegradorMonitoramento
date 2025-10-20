@@ -201,6 +201,7 @@ class DashboardCore {
             }
 
         } catch (error) {
+            console.error('❌ ERRO em updateData:', error);
             if (timerId) {
                 this.performanceMonitor.endTimer(timerId, { success: false, error: error.message });
             }
@@ -210,8 +211,15 @@ class DashboardCore {
                 operation: 'updateData',
                 recoverable: true
             });
+
+            // Force hide loading overlay on error
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+            }
         } finally {
             this.setLoading(false);
+            console.log('✅ updateData finalizado');
         }
     }
 
@@ -421,12 +429,18 @@ class DashboardCore {
     setLoading(isLoading) {
         this.state.isLoading = isLoading;
         const body = document.body;
+        const loadingOverlay = document.getElementById('loading-overlay');
+
         // A melhor prática é controlar a visibilidade dos skeletons via CSS
         // Adicionando/removendo uma classe no body ou em um container principal.
         if (isLoading) {
             body.classList.add('is-loading');
         } else {
             body.classList.remove('is-loading');
+            // Hide loading overlay when done
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+            }
         }
     }
 

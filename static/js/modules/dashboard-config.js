@@ -12,7 +12,8 @@ class DashboardConfig {
                 endpoints: {
                     summary: '/summary/',
                     series: '/series/',
-                    health: '/health/'
+                    violations: '/violations/',
+                    health: '/system/health/'
                 },
                 timeout: 10000,
                 retries: 3,

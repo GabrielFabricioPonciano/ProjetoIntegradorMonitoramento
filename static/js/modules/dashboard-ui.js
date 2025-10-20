@@ -83,27 +83,35 @@ class DashboardUI {
         const skeleton = document.getElementById('temp-skeleton');
 
         if (tempData && tempData.average !== undefined) {
-            const tempMeanElement = document.getElementById('temp-mean');
-            const tempRangeElement = document.getElementById('temp-range');
+            const tempValueElement = document.getElementById('temp-value');
+            const tempMinElement = document.getElementById('temp-min');
+            const tempMaxElement = document.getElementById('temp-max');
 
-            if (tempMeanElement) {
-                tempMeanElement.textContent = `${tempData.average.toFixed(1)}°C`;
-                this.updateTemperatureStatus(tempMeanElement, tempData.average);
+            if (tempValueElement) {
+                tempValueElement.textContent = `${tempData.average.toFixed(1)}°C`;
+                this.updateTemperatureStatus(tempValueElement, tempData.average);
             }
 
-            if (tempRangeElement) {
-                tempRangeElement.textContent =
-                    `Min: ${tempData.min.toFixed(1)}°C | Max: ${tempData.max.toFixed(1)}°C`;
+            if (tempMinElement) {
+                tempMinElement.textContent = `${tempData.min.toFixed(1)}°C`;
+            }
+
+            if (tempMaxElement) {
+                tempMaxElement.textContent = `${tempData.max.toFixed(1)}°C`;
             }
         } else {
-            const tempMeanElement = document.getElementById('temp-mean');
-            const tempRangeElement = document.getElementById('temp-range');
+            const tempValueElement = document.getElementById('temp-value');
+            const tempMinElement = document.getElementById('temp-min');
+            const tempMaxElement = document.getElementById('temp-max');
 
-            if (tempMeanElement) {
-                tempMeanElement.textContent = '--';
+            if (tempValueElement) {
+                tempValueElement.textContent = '--';
             }
-            if (tempRangeElement) {
-                tempRangeElement.textContent = 'Min: -- | Max: --';
+            if (tempMinElement) {
+                tempMinElement.textContent = '--';
+            }
+            if (tempMaxElement) {
+                tempMaxElement.textContent = '--';
             }
         }
     }
@@ -113,24 +121,30 @@ class DashboardUI {
         const skeleton = document.getElementById('humidity-skeleton');
 
         if (humidityData && humidityData.average !== undefined) {
-            const rhMeanElement = document.getElementById('rh-mean');
-            const rhRangeElement = document.getElementById('rh-range');
+            const humidityValueElement = document.getElementById('humidity-value');
+            const humidityMinElement = document.getElementById('humidity-min');
+            const humidityMaxElement = document.getElementById('humidity-max');
 
-            if (rhMeanElement) {
-                rhMeanElement.textContent = `${humidityData.average.toFixed(1)}%`;
-                this.updateHumidityStatus(rhMeanElement, humidityData.average);
+            if (humidityValueElement) {
+                humidityValueElement.textContent = `${humidityData.average.toFixed(1)}%`;
+                this.updateHumidityStatus(humidityValueElement, humidityData.average);
             }
 
-            if (rhRangeElement) {
-                rhRangeElement.textContent =
-                    `Min: ${humidityData.min.toFixed(1)}% | Max: ${humidityData.max.toFixed(1)}%`;
+            if (humidityMinElement) {
+                humidityMinElement.textContent = `${humidityData.min.toFixed(1)}%`;
+            }
+
+            if (humidityMaxElement) {
+                humidityMaxElement.textContent = `${humidityData.max.toFixed(1)}%`;
             }
         } else {
-            const rhMeanElement = document.getElementById('rh-mean');
-            const rhRangeElement = document.getElementById('rh-range');
+            const humidityValueElement = document.getElementById('humidity-value');
+            const humidityMinElement = document.getElementById('humidity-min');
+            const humidityMaxElement = document.getElementById('humidity-max');
 
-            if (rhMeanElement) rhMeanElement.textContent = '--';
-            if (rhRangeElement) rhRangeElement.textContent = 'Min: -- | Max: --';
+            if (humidityValueElement) humidityValueElement.textContent = '--';
+            if (humidityMinElement) humidityMinElement.textContent = '--';
+            if (humidityMaxElement) humidityMaxElement.textContent = '--';
         }
     }
 
@@ -144,21 +158,17 @@ class DashboardUI {
                 violationsData.base_measurements : 0;
             const percentage = base > 0 ? ((total / base) * 100).toFixed(1) : '0.0';
 
-            const violationsCountElement = document.getElementById('violations-count');
-            const violationsPctElement = document.getElementById('violations-pct');
-            const violationsBaseElement = document.getElementById('violations-base');
+            const violationsValueElement = document.getElementById('violations-value');
+            const violationsPercentageElement = document.getElementById('violations-percentage');
 
-            if (violationsCountElement) violationsCountElement.textContent = total.toLocaleString();
-            if (violationsPctElement) violationsPctElement.textContent = `${percentage}% do total`;
-            if (violationsBaseElement) violationsBaseElement.textContent = `Base: ${base.toLocaleString()} medições`;
+            if (violationsValueElement) violationsValueElement.textContent = total.toLocaleString();
+            if (violationsPercentageElement) violationsPercentageElement.textContent = `${percentage}% do total de medições`;
         } else {
-            const violationsCountElement = document.getElementById('violations-count');
-            const violationsPctElement = document.getElementById('violations-pct');
-            const violationsBaseElement = document.getElementById('violations-base');
+            const violationsValueElement = document.getElementById('violations-value');
+            const violationsPercentageElement = document.getElementById('violations-percentage');
 
-            if (violationsCountElement) violationsCountElement.textContent = '--';
-            if (violationsPctElement) violationsPctElement.textContent = '-- do total';
-            if (violationsBaseElement) violationsBaseElement.textContent = 'Base: -- medições';
+            if (violationsValueElement) violationsValueElement.textContent = '--';
+            if (violationsPercentageElement) violationsPercentageElement.textContent = '-- do total de medições';
         }
     }
 
@@ -168,14 +178,14 @@ class DashboardUI {
 
         if (measurementsData !== undefined) {
             const total = typeof measurementsData === 'number' ? measurementsData : (measurementsData.total || 0);
-            const totalMeasurementsElement = document.getElementById('total-measurements');
-            if (totalMeasurementsElement) {
-                totalMeasurementsElement.textContent = total.toLocaleString();
+            const measurementsValueElement = document.getElementById('measurements-value');
+            if (measurementsValueElement) {
+                measurementsValueElement.textContent = total.toLocaleString('pt-BR');
             }
         } else {
-            const totalMeasurementsElement = document.getElementById('total-measurements');
-            if (totalMeasurementsElement) {
-                totalMeasurementsElement.textContent = '--';
+            const measurementsValueElement = document.getElementById('measurements-value');
+            if (measurementsValueElement) {
+                measurementsValueElement.textContent = '--';
             }
         }
     }

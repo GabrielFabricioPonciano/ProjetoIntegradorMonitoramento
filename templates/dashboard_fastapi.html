@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Monitoramento Ambiental</title>
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --card-hover-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            --transition-speed: 0.3s;
+            --border-radius: 0.75rem;
+            --spacing-unit: 1rem;
+            --header-height: 70px;
+            --footer-height: 60px;
+            --kpi-height: 120px;
+            --chart-height: 400px;
+            --violations-height: 500px;
+            --max-content-width: 1400px;
+            --temp-good: #28a745;
+            --temp-warning: #ffc107;
+            --temp-danger: #dc3545;
+            --humidity-good: #17a2b8;
+            --humidity-warning: #ffc107;
+            --humidity-danger: #dc3545;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+            color: var(--dark-color);
+        }
+
+        nav.navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: var(--bg-gradient) !important;
+        }
+
+        nav.navbar .navbar-brand {
+            font-size: 1.25rem;
+        }
+
+        nav.navbar .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        nav.navbar .nav-link:hover {
+            color: rgba(255, 255, 255, 1) !important;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 1.5rem 0;
+            background: white;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        footer .text-muted,
+        footer small {
+            color: #6c757d !important;
+        }
+
+        footer p,
+        footer .row {
+            margin-bottom: 0;
+        }
+
+        .dashboard-container {
+            max-width: var(--max-content-width);
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: var(--max-content-width);
+            margin: 0 auto;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+            animation: fadeInUp 0.6s ease-out;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--success-color), #20c997);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            animation: fadeInUp 0.6s ease-out 0.4s both, pulse 2s ease-in-out infinite;
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.4);
+            transition: all var(--transition-speed);
+        }
+
+        .status-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 135, 84, 0.5);
+        }
+
+        .status-badge i {
+            font-size: 1.2rem;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 15px rgba(25, 135, 84, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 4px 25px rgba(25, 135, 84, 0.6);
+            }
+        }
+
+        .info-banner {
+            margin-bottom: 2rem;
+        }
+
+        .banner-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: var(--card-shadow);
+            transition: all var(--transition-speed);
+        }
+
+        .banner-content:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .banner-icon {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--info-color), #0d6efd);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(13, 202, 240, 0.3);
+        }
+
+        .banner-text h5 {
+            margin: 0 0 0.5rem 0;
+            color: var(--dark-color);
+            font-weight: 700;
+        }
+
+        .banner-text p {
+            margin: 0;
+            color: var(--secondary-color);
+        }
+
+        .banner-text small {
+            color: #6c757d;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            transition: all var(--transition-speed);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .kpi-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            line-height: 1;
+        }
+
+        .kpi-label {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-range {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: all var(--transition-speed);
+            background: white;
+        }
+
+        .card:hover {
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            padding: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn-fullscreen {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-fullscreen:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .chart-container {
+            position: relative;
+            height: var(--chart-height);
+            width: 100%;
+        }
+
+        .violations-container {
+            max-height: var(--violations-height);
+            overflow-y: auto;
+        }
+
+        .violation-item {
+            background: #f8f9fa;
+            border-left: 4px solid var(--danger-color);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.5rem;
+            transition: all var(--transition-speed);
+        }
+
+        .violation-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .violation-time {
+            color: var(--secondary-color);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .violation-reason {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 0.25rem;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-text {
+            height: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .skeleton-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        .modal-fullscreen-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1050;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-fullscreen-custom.show {
+            display: flex;
+        }
+
+        .modal-content-fullscreen {
+            width: 95%;
+            height: 95%;
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1060;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            .kpi-value {
+                font-size: 1.5rem;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            .dashboard-container {
+                padding: 1rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-thermometer-half me-2"></i>
+                Sistema de Monitoramento Ambiental
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/docs" target="_blank">
+                            <i class="fas fa-book me-1"></i>API Docs
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <main class="py-4">
+        <div class="dashboard-container">
+            <header>
+                <h1><i class="fas fa-chart-line me-2"></i>Dashboard Ambiental</h1>
+                <p>Sistema avançado de monitoramento de condições ambientais</p>
+                <div class="status-badge">
+                    <i class="fas fa-circle-check"></i>
+                    <span>Sistema Online</span>
+                    <small class="ms-2">Atualizado às <span id="last-update-time">--:--</span></small>
+                </div>
+            </header>
+
+            <!-- Info Banner -->
+            <div class="info-banner">
+                <div class="banner-content">
+                    <div class="banner-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="banner-text">
+                        <h5>Condições Ideais (Embrapa)</h5>
+                        <p><strong>Temperatura:</strong> 17–19,5°C | <strong>Umidade Relativa:</strong> ≤ 62%</p>
+                        <small>Sistema profissional de monitoramento com alertas automáticos</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPIs Row -->
+            <div class="row g-4 mb-4">
+                <!-- Temperature KPI -->
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="kpi-card">
+                        <div class="kpi-skeleton" id="temp-skeleton">
+                            <div class="skeleton skeleton-circle mb-3"></div>
+                            <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%; height: 2rem;"></div>
+                            <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                        </div>
+                        <div class="kpi-content" id="temp-content" style="display: none;">
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f);">
+                                <i class="fas fa-temperature-high"></i>
+                            </div>
+                            <div class="kpi-label">Temperatura Média</div>
+                            <div class="kpi-value" id="temp-value">--</div>
+                            <div class="kpi-range">Min: <span id="temp-min">--</span> | Max: <span
+                                    id="temp-max">--</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Humidity KPI -->
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="kpi-card">
+                        <div class="kpi-skeleton" id="humidity-skeleton">
+                            <div class="skeleton skeleton-circle mb-3"></div>
+                            <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%; height: 2rem;"></div>
+                            <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                        </div>
+                        <div class="kpi-content" id="humidity-content" style="display: none;">
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                                <i class="fas fa-droplet"></i>
+                            </div>
+                            <div class="kpi-label">Umidade Relativa Média</div>
+                            <div class="kpi-value" id="humidity-value">--</div>
+                            <div class="kpi-range">Min: <span id="humidity-min">--</span> | Max: <span
+                                    id="humidity-max">--</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Violations KPI -->
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="kpi-card">
+                        <div class="kpi-skeleton" id="violations-skeleton">
+                            <div class="skeleton skeleton-circle mb-3"></div>
+                            <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%; height: 2rem;"></div>
+                            <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                        </div>
+                        <div class="kpi-content" id="violations-content" style="display: none;">
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #ffc107, #ff9800);">
+                                <i class="fas fa-triangle-exclamation"></i>
+                            </div>
+                            <div class="kpi-label">Violações Detectadas</div>
+                            <div class="kpi-value" id="violations-value">--</div>
+                            <div class="kpi-range"><span id="violations-percentage">--</span> do total de medições</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Measurements KPI -->
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="kpi-card">
+                        <div class="kpi-skeleton" id="measurements-skeleton">
+                            <div class="skeleton skeleton-circle mb-3"></div>
+                            <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%; height: 2rem;"></div>
+                            <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                        </div>
+                        <div class="kpi-content" id="measurements-content" style="display: none;">
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="kpi-label">Total de Medições</div>
+                            <div class="kpi-value" id="measurements-value">--</div>
+                            <div class="kpi-range">Últimos 30 dias</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Title -->
+            <div class="text-center mb-4">
+                <h3 class="fw-bold"><i class="fas fa-chart-area me-2"></i>Análise Detalhada</h3>
+                <p class="text-muted">Tendências e padrões dos últimos 30 dias</p>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row g-4 mb-4">
+                <!-- Temperature Chart -->
+                <div class="col-12 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <span><i class="fas fa-temperature-high me-2"></i>Temperatura (°C)</span>
+                            <button class="btn btn-fullscreen btn-sm" onclick="openChartFullscreen('temperature')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="temperature-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Humidity Chart -->
+                <div class="col-12 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <span><i class="fas fa-droplet me-2"></i>Umidade Relativa (%)</span>
+                            <button class="btn btn-fullscreen btn-sm" onclick="openChartFullscreen('humidity')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="humidity-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Violations Section -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <span><i class="fas fa-triangle-exclamation me-2"></i>Últimas Violações</span>
+                            <button class="btn btn-fullscreen btn-sm" onclick="openChartFullscreen('violations')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">Medições que excederam os limites ideais</p>
+                            <div class="violations-container" id="violations-list">
+                                <div class="text-center py-4">
+                                    <div class="loading-spinner"
+                                        style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+                                    <p style="color: rgba(0,0,0,0.5); margin: 0;">Carregando violações...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 small">
+                        <i class="fas fa-university me-2"></i>
+                        Projeto Integrador IV - Sistema de Monitoramento
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small>
+                        FastAPI | PostgreSQL | SQLAlchemy
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Modal -->
+    <div class="modal-fullscreen-custom" id="chart-fullscreen-modal">
+        <div class="modal-content-fullscreen">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">
+                    <i class="fas fa-chart-line me-2" id="fullscreen-chart-icon"></i>
+                    <span id="fullscreen-chart-title">Gráfico</span>
+                </h3>
+                <button class="btn btn-danger" onclick="closeChartFullscreen()">
+                    <i class="fas fa-times me-2"></i>Fechar
+                </button>
+            </div>
+            <div id="fullscreen-chart-container" style="height: calc(100% - 80px);"></div>
+        </div>
+    </div>
+
+    <!-- Chart.js must be loaded first -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core system modules (loaded first) -->
+    <script src="/static/js/modules/dashboard-config.js?v=7"></script>
+    <script src="/static/js/modules/dashboard-error-handler.js?v=7"></script>
+    <script src="/static/js/modules/dashboard-performance-monitor.js?v=7"></script>
+
+    <!-- Dashboard modules -->
+    <script src="/static/js/modules/dashboard-core.js?v=7"></script>
+    <script src="/static/js/modules/dashboard-ui.js?v=7"></script>
+    <script src="/static/js/modules/dashboard-data.js?v=7"></script>
+    <script src="/static/js/modules/dashboard-charts.js?v=7"></script>
+    <script src="/static/js/modules/dashboard-fullscreen.js?v=7"></script>
+
+    <!-- Initialization -->
+    <script src="/static/js/dashboard-init.js?v=7"></script>
+</body>
+
+</html>
