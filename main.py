@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.database import get_db, engine
+from app.database import get_db, engine, SessionLocal
 from app import models, schemas
 from app.domain import is_violation, violation_reason, TEMP_LOW, TEMP_HIGH, RH_LIMIT
 from app.logger import logger
@@ -505,6 +505,99 @@ async def api_analytics_statistics(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ==================== Database Management ====================
+
+@app.post("/api/admin/populate-db/", tags=["Admin"])
+async def populate_database(
+    days: int = Query(365, ge=1, le=730, description="Número de dias de dados para gerar"),
+    force: bool = Query(False, description="Forçar recriação mesmo com dados existentes"),
+    db: Session = Depends(get_db)
+):
+    """
+    Popular banco de dados com dados de amostra
+    
+    Útil para testes e demonstrações. Gera dados realísticos de temperatura e umidade.
+    """
+    import random
+    
+    try:
+        # Check existing data
+        existing_count = db.query(models.Measurement).count()
+        
+        if existing_count > 0 and not force:
+            return {
+                "status": "skipped",
+                "message": f"Database already has {existing_count} records. Use force=true to recreate.",
+                "existing_records": existing_count
+            }
+        
+        # Clear existing data if force=true
+        if existing_count > 0 and force:
+            db.query(models.Measurement).delete()
+            db.commit()
+            logger.info(f"Cleared {existing_count} existing records")
+        
+        # Generate data
+        sao_paulo_tz = ZoneInfo("America/Sao_Paulo")
+        start_date = datetime(2024, 11, 1, tzinfo=sao_paulo_tz)
+        
+        # Time points for measurements (07:30 and 16:30)
+        time_points = [(7, 30), (16, 30)]
+        
+        measurements = []
+        for day in range(days):
+            current_date = start_date + timedelta(days=day)
+            
+            for hour, minute in time_points:
+                ts = current_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                
+                # Generate realistic values
+                temp = random.gauss(18.4, 0.4)
+                temp = max(17.0, min(19.5, temp))
+                
+                humidity_pct = random.gauss(59.0, 2.0)
+                humidity_pct = max(56.0, min(65.0, humidity_pct))
+                humidity = humidity_pct / 100.0
+                
+                measurement = models.Measurement(
+                    ts=ts,
+                    temp_current=round(temp, 2),
+                    temp_min=round(temp, 2),
+                    temp_max=round(temp, 2),
+                    rh_current=round(humidity, 4),
+                    rh_min=round(humidity, 4),
+                    rh_max=round(humidity, 4)
+                )
+                measurements.append(measurement)
+        
+        # Bulk insert
+        db.bulk_save_objects(measurements)
+        db.commit()
+        
+        total_records = len(measurements)
+        violations = sum(1 for m in measurements 
+                        if m.temp_current < 17.0 or m.temp_current > 19.5 or m.rh_current >= 0.62)
+        
+        logger.info(f"Generated {total_records} measurements with {violations} violations")
+        
+        return {
+            "status": "success",
+            "message": "Database populated successfully!",
+            "total_records": total_records,
+            "violations": violations,
+            "violation_percentage": round(violations/total_records*100, 2),
+            "date_range": {
+                "start": start_date.date().isoformat(),
+                "end": (start_date + timedelta(days=days-1)).date().isoformat()
+            }
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error populating database: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== Startup/Shutdown Events ====================
 
 @app.on_event("startup")
@@ -515,6 +608,56 @@ async def startup_event():
     logger.info("📊 Dashboard: http://localhost:8000")
     logger.info("📖 API Docs: http://localhost:8000/api/docs")
     logger.info("=" * 60)
+    
+    # Auto-populate database if empty
+    import random
+    db = SessionLocal()
+    try:
+        count = db.query(models.Measurement).count()
+        if count == 0:
+            logger.info("📦 Database is empty. Auto-populating with sample data...")
+            
+            # Generate 1 year of data
+            sao_paulo_tz = ZoneInfo("America/Sao_Paulo")
+            start_date = datetime(2024, 11, 1, tzinfo=sao_paulo_tz)
+            days = 365
+            time_points = [(7, 30), (16, 30)]
+            
+            measurements = []
+            for day in range(days):
+                current_date = start_date + timedelta(days=day)
+                
+                for hour, minute in time_points:
+                    ts = current_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                    
+                    temp = random.gauss(18.4, 0.4)
+                    temp = max(17.0, min(19.5, temp))
+                    
+                    humidity_pct = random.gauss(59.0, 2.0)
+                    humidity_pct = max(56.0, min(65.0, humidity_pct))
+                    humidity = humidity_pct / 100.0
+                    
+                    measurement = models.Measurement(
+                        ts=ts,
+                        temp_current=round(temp, 2),
+                        temp_min=round(temp, 2),
+                        temp_max=round(temp, 2),
+                        rh_current=round(humidity, 4),
+                        rh_min=round(humidity, 4),
+                        rh_max=round(humidity, 4)
+                    )
+                    measurements.append(measurement)
+            
+            db.bulk_save_objects(measurements)
+            db.commit()
+            logger.info(f"✅ Auto-populated database with {len(measurements)} records!")
+        else:
+            logger.info(f"✅ Database has {count} existing records")
+    except Exception as e:
+        logger.error(f"❌ Error auto-populating database: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
 
 @app.on_event("shutdown")
