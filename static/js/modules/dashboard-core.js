@@ -162,6 +162,17 @@ class DashboardCore {
     registerComponent(name, component) {
         this.components[name] = component;
         console.log(`Componente '${name}' registrado.`);
+
+        // Se for o módulo de analytics, inicializar
+        if (name === 'analytics' && component && typeof component.init === 'function') {
+            console.log('🔬 Inicializando módulo de analytics...');
+            try {
+                component.init();
+                console.log('✅ Módulo de analytics inicializado com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar analytics:', error);
+            }
+        }
     }
 
     /**

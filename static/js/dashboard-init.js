@@ -83,6 +83,10 @@ console.log('🚀 dashboard-init.js loaded');
             console.log('DashboardFullscreen criado:', !!dashboardFullscreen);
             console.log('window.DashboardFullscreen:', window.DashboardFullscreen);
 
+            // Analytics module
+            const analyticsModule = window.AnalyticsModule || null;
+            console.log('AnalyticsModule loaded:', !!analyticsModule);
+
             // 4. Registrar os módulos no Core
             if (dashboardUI) {
                 dashboardCore.registerComponent('ui', dashboardUI);
@@ -101,6 +105,9 @@ console.log('🚀 dashboard-init.js loaded');
                 // Disponibilizar globalmente
                 window.dashboardFullscreen = dashboardFullscreen;
             }
+            if (analyticsModule) {
+                dashboardCore.registerComponent('analytics', analyticsModule);
+            }
 
             // 5. Inicializar o sistema
             dashboardCore.init();
@@ -112,6 +119,7 @@ console.log('🚀 dashboard-init.js loaded');
                 charts: dashboardCharts,
                 data: dashboardData,
                 fullscreen: dashboardFullscreen,
+                analytics: analyticsModule,
                 config: dashboardConfig,
                 errorHandler: errorHandler,
                 performanceMonitor: performanceMonitor

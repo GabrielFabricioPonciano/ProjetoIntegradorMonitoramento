@@ -19,6 +19,11 @@ fastapi-cors==0.0.6
 # Sistema/Monitoramento (opcional)
 psutil==5.9.8
 
+# Machine Learning e Análise de Dados
+scikit-learn==1.4.0
+numpy==1.26.3
+scipy==1.12.0
+
 # Timezone
 pytz==2024.1
 tzdata==2024.1

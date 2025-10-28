@@ -141,10 +141,10 @@ staticfiles/
 *.sql
 *.dump
 
-# Docker
-Dockerfile*
-docker-compose*
-.dockerignore
+# Docker - Comentado para manter arquivos Docker no repositório
+# Dockerfile*
+# docker-compose*
+# .dockerignore
 
 # Backup files
 *.bak

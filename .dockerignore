@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific - OLD Django files
+monitoring/
+df.js
+manage.py
+*.old
+*.backup
+
+# Git
+.git/
+.gitignore
+
+# Documentation (keep README for reference)
+docs/
+
+# Data files (will be mounted as volume)
+data/*.db
+data/backups/
+
+# Logs (will be mounted as volume)
+logs/*.log
+logs/*.log.*
+
+# Environment
+.env.local

@@ -5,24 +5,37 @@ Migrated from Django to FastAPI
 Features:
 - Serve static files and templates
 - REST API endpoints for monitoring data
-- PostgreSQL database with SQLAlchemy
+- SQLite database with SQLAlchemy
 - Async support for better performance
 - Auto-generated API documentation (Swagger UI)
+- Exception handling and error responses
+- Performance monitoring
 """
 from datetime import datetime, timedelta
 from typing import Optional, List
 from zoneinfo import ZoneInfo
+import traceback
 
 from fastapi import FastAPI, Depends, Query, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_, or_, text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import get_db, engine
 from app import models, schemas
 from app.domain import is_violation, violation_reason, TEMP_LOW, TEMP_HIGH, RH_LIMIT
+from app.logger import logger
+from app.analytics import analytics_engine
+
+# Constants
+TIMEZONE = "America/Sao_Paulo"
+QUERY_DAYS_DESC = "Filtrar últimos N dias"
+QUERY_START_DESC = "Data inicial (YYYY-MM-DD)"
+QUERY_END_DESC = "Data final (YYYY-MM-DD)"
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
@@ -45,11 +58,83 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# ==================== Exception Handlers ====================
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions with JSON response"""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.detail,
+            "status_code": exc.status_code,
+            "path": str(request.url),
+            "timestamp": datetime.now(ZoneInfo(TIMEZONE)).isoformat()
+        }
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors with JSON response"""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "Erro de validação",
+            "details": exc.errors(),
+            "status_code": 422,
+            "path": str(request.url),
+            "timestamp": datetime.now(ZoneInfo(TIMEZONE)).isoformat()
+        }
+    )
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    """Handle database errors"""
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Erro de banco de dados",
+            "details": str(exc) if app.debug else "Erro interno do servidor",
+            "status_code": 500,
+            "path": str(request.url),
+            "timestamp": datetime.now(ZoneInfo(TIMEZONE)).isoformat()
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle all other exceptions"""
+    # Log the full traceback
+    logger.error(f"Unhandled exception at {request.url}: {exc}")
+    logger.error(traceback.format_exc())
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Erro interno do servidor",
+            "details": str(exc) if app.debug else None,
+            "status_code": 500,
+            "path": str(request.url),
+            "timestamp": datetime.now(ZoneInfo(TIMEZONE)).isoformat()
+        }
+    )
+
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # ==================== HTML Routes ====================
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Serve favicon"""
+    return FileResponse("static/images/favicon.svg", media_type="image/svg+xml")
+
 
 @app.get("/", include_in_schema=False)
 @app.get("/dashboard/", include_in_schema=False)
@@ -80,7 +165,7 @@ def apply_date_filters(
     """
     # Filter by days
     if days and days > 0:
-        end_dt = datetime.now(ZoneInfo("America/Sao_Paulo"))
+        end_dt = datetime.now(ZoneInfo(TIMEZONE))
         start_dt = end_dt - timedelta(days=days)
         return query.filter(
             models.Measurement.ts >= start_dt,
@@ -90,7 +175,7 @@ def apply_date_filters(
     # Filter by date range
     if start_date and end_date:
         try:
-            sao_paulo_tz = ZoneInfo("America/Sao_Paulo")
+            sao_paulo_tz = ZoneInfo(TIMEZONE)
             start_dt = datetime.fromisoformat(start_date).replace(
                 hour=0, minute=0, second=0, tzinfo=sao_paulo_tz
             )
@@ -111,9 +196,9 @@ def apply_date_filters(
 
 @app.get("/api/summary/", response_model=schemas.SummaryResponse, tags=["Resumo"])
 async def api_summary(
-    days: Optional[int] = Query(None, description="Filtrar últimos N dias"),
-    start_date: Optional[str] = Query(None, description="Data inicial (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="Data final (YYYY-MM-DD)"),
+    days: Optional[int] = Query(None, description=QUERY_DAYS_DESC),
+    start_date: Optional[str] = Query(None, description=QUERY_START_DESC),
+    end_date: Optional[str] = Query(None, description=QUERY_END_DESC),
     db: Session = Depends(get_db)
 ):
     """
@@ -168,9 +253,9 @@ async def api_summary(
 @app.get("/api/series/", response_model=List[schemas.SeriesPoint], tags=["Séries"])
 async def api_series(
     max_points: int = Query(1000, description="Quantidade máxima de pontos"),
-    days: Optional[int] = Query(None, description="Filtrar últimos N dias"),
-    start_date: Optional[str] = Query(None, description="Data inicial (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="Data final (YYYY-MM-DD)"),
+    days: Optional[int] = Query(None, description=QUERY_DAYS_DESC),
+    start_date: Optional[str] = Query(None, description=QUERY_START_DESC),
+    end_date: Optional[str] = Query(None, description=QUERY_END_DESC),
     db: Session = Depends(get_db)
 ):
     """
@@ -189,7 +274,7 @@ async def api_series(
     records = query.order_by(models.Measurement.ts).limit(max_points).all()
     
     # Prepare timezone
-    sao_paulo_tz = ZoneInfo("America/Sao_Paulo")
+    sao_paulo_tz = ZoneInfo(TIMEZONE)
     
     # Format response
     points = [
@@ -207,9 +292,9 @@ async def api_series(
 @app.get("/api/violations/", response_model=List[schemas.ViolationItem], tags=["Violações"])
 async def api_violations(
     limit: int = Query(20, description="Quantidade de registros"),
-    days: Optional[int] = Query(None, description="Filtrar últimos N dias"),
-    start_date: Optional[str] = Query(None, description="Data inicial (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="Data final (YYYY-MM-DD)"),
+    days: Optional[int] = Query(None, description=QUERY_DAYS_DESC),
+    start_date: Optional[str] = Query(None, description=QUERY_START_DESC),
+    end_date: Optional[str] = Query(None, description=QUERY_END_DESC),
     db: Session = Depends(get_db)
 ):
     """
@@ -237,7 +322,7 @@ async def api_violations(
     records = query.order_by(models.Measurement.ts.desc()).limit(limit).all()
     
     # Prepare timezone
-    sao_paulo_tz = ZoneInfo("America/Sao_Paulo")
+    sao_paulo_tz = ZoneInfo(TIMEZONE)
     
     # Format response
     items = [
@@ -273,7 +358,7 @@ async def api_frontend_logs():
     """
     return [
         {
-            "timestamp": datetime.now(ZoneInfo("America/Sao_Paulo")).isoformat(),
+            "timestamp": datetime.now(ZoneInfo(TIMEZONE)).isoformat(),
             "level": "INFO",
             "message": "Frontend log example"
         }
@@ -311,7 +396,7 @@ async def api_system_health(db: Session = Depends(get_db)):
     
     # Check database connection
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         health_checks["database_connection"] = "healthy"
     except Exception:
         health_checks["database_connection"] = "unhealthy"
@@ -320,7 +405,7 @@ async def api_system_health(db: Session = Depends(get_db)):
     # Check recent data flow
     if health_checks["database_connection"] == "healthy":
         try:
-            one_hour_ago = datetime.now(ZoneInfo("America/Sao_Paulo")) - timedelta(hours=1)
+            one_hour_ago = datetime.now(ZoneInfo(TIMEZONE)) - timedelta(hours=1)
             recent_count = db.query(models.Measurement).filter(
                 models.Measurement.ts >= one_hour_ago
             ).count()
@@ -339,9 +424,85 @@ async def api_system_health(db: Session = Depends(get_db)):
     
     return schemas.HealthCheck(
         status=overall_status,
-        timestamp=datetime.now(ZoneInfo("America/Sao_Paulo")).isoformat(),
+        timestamp=datetime.now(ZoneInfo(TIMEZONE)).isoformat(),
         checks=health_checks
     )
+
+
+# ==================== Analytics Endpoints ====================
+
+@app.get("/api/analytics/trends/", tags=["Analytics"])
+async def api_analytics_trends(
+    days_history: int = Query(30, ge=7, le=90, description="Dias de histórico para análise"),
+    days_forecast: int = Query(7, ge=1, le=30, description="Dias de previsão"),
+    db: Session = Depends(get_db)
+):
+    """
+    Análise de tendências com predição usando Machine Learning
+    
+    Utiliza regressão linear para prever tendências futuras de temperatura e umidade.
+    Retorna coeficientes, qualidade do modelo (R²) e predições para os próximos dias.
+    """
+    try:
+        result = analytics_engine.predict_trends(db, days_history, days_forecast)
+        return result
+    except Exception as e:
+        logger.error(f"Erro em analytics/trends: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/patterns/", tags=["Analytics"])
+async def api_analytics_patterns(db: Session = Depends(get_db)):
+    """
+    Análise de padrões sazonais (hora do dia, dia da semana)
+    
+    Identifica padrões de temperatura e umidade ao longo do dia e da semana.
+    Útil para detectar comportamentos cíclicos e otimizar controle ambiental.
+    """
+    try:
+        result = analytics_engine.analyze_patterns(db)
+        return result
+    except Exception as e:
+        logger.error(f"Erro em analytics/patterns: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/correlations/", tags=["Analytics"])
+async def api_analytics_correlations(
+    days: int = Query(30, ge=7, le=90, description="Dias para análise"),
+    db: Session = Depends(get_db)
+):
+    """
+    Análise de correlações entre temperatura e umidade
+    
+    Calcula correlações de Pearson e Spearman para identificar relações
+    lineares e monotônicas entre as variáveis ambientais.
+    """
+    try:
+        result = analytics_engine.calculate_correlations(db, days)
+        return result
+    except Exception as e:
+        logger.error(f"Erro em analytics/correlations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/statistics/", tags=["Analytics"])
+async def api_analytics_statistics(
+    days: int = Query(30, ge=7, le=90, description="Dias para análise"),
+    db: Session = Depends(get_db)
+):
+    """
+    Estatísticas avançadas (quartis, assimetria, curtose)
+    
+    Fornece métricas estatísticas detalhadas incluindo medidas de
+    dispersão, forma da distribuição e quartis.
+    """
+    try:
+        result = analytics_engine.advanced_statistics(db, days)
+        return result
+    except Exception as e:
+        logger.error(f"Erro em analytics/statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ==================== Startup/Shutdown Events ====================
@@ -349,12 +510,14 @@ async def api_system_health(db: Session = Depends(get_db)):
 @app.on_event("startup")
 async def startup_event():
     """Execute on application startup"""
-    print("🚀 FastAPI application started!")
-    print("📊 Dashboard: http://localhost:8000")
-    print("📖 API Docs: http://localhost:8000/api/docs")
+    logger.info("=" * 60)
+    logger.info("🚀 FastAPI application started!")
+    logger.info("📊 Dashboard: http://localhost:8000")
+    logger.info("📖 API Docs: http://localhost:8000/api/docs")
+    logger.info("=" * 60)
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Execute on application shutdown"""
-    print("👋 FastAPI application shutting down...")
+    logger.info("👋 FastAPI application shutting down...")

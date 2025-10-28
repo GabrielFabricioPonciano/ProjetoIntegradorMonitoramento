@@ -4,10 +4,14 @@
  */
 
 class DashboardFullscreen {
-    constructor() {
+    constructor(config = null, errorHandler = null) {
+        this.config = config;
+        this.errorHandler = errorHandler;
         this.fullscreenChart = null;
         this.currentChartType = null;
         this.modal = null;
+
+        console.log('🎬 DashboardFullscreen constructor called');
         this.init();
     }
 
@@ -23,15 +27,22 @@ class DashboardFullscreen {
     initializeElements() {
         this.modal = document.getElementById('chart-fullscreen-modal');
 
+        if (!this.modal) {
+            console.error('❌ Modal fullscreen não encontrado! ID: chart-fullscreen-modal');
+            return;
+        }
+
+        console.log('✅ Modal fullscreen encontrado:', this.modal);
+
         // Adicionar listener para fechar com ESC
         this.keydownHandler = (e) => {
-            if (e.key === 'Escape' && this.modal && this.modal.classList.contains('active')) {
+            if (e.key === 'Escape' && this.modal && this.modal.classList.contains('show')) {
                 this.closeFullscreen();
             }
         };
         document.addEventListener('keydown', this.keydownHandler);
 
-        // Fechar clicando fora do conteúdo (guardado)
+        // Fechar clicando fora do conteúdo
         if (this.modal) {
             this.clickHandler = (e) => {
                 if (e.target === this.modal) {
@@ -40,10 +51,24 @@ class DashboardFullscreen {
             };
             this.modal.addEventListener('click', this.clickHandler);
         }
+
+        console.log('✅ DashboardFullscreen inicializado com sucesso');
     }
 
     openFullscreen(chartType) {
         console.log('🎯 openFullscreen chamado com:', chartType);
+
+        // Verificar se modal existe, se não tentar encontrar novamente
+        if (!this.modal) {
+            console.warn('⚠️ Modal não estava inicializado, tentando encontrar...');
+            this.modal = document.getElementById('chart-fullscreen-modal');
+        }
+
+        if (!this.modal) {
+            console.error('❌ Modal não encontrado! Verifique se o elemento com ID "chart-fullscreen-modal" existe no HTML');
+            alert('Erro: Modal de fullscreen não encontrado. Por favor, recarregue a página.');
+            return;
+        }
 
         this.currentChartType = chartType;
 
@@ -51,14 +76,11 @@ class DashboardFullscreen {
         this.setupModal(chartType);
 
         // Mostrar modal
-        if (this.modal) {
-            this.modal.classList.add('active');
-            document.body.classList.add('modal-active');
-            document.body.style.overflow = 'hidden';
-        } else {
-            console.error('❌ Modal não encontrado!');
-            return;
-        }
+        this.modal.classList.add('show');
+        document.body.classList.add('modal-active');
+        document.body.style.overflow = 'hidden';
+
+        console.log('✅ Modal aberto, classe "show" adicionada');
 
         // Aguardar modal aparecer e criar conteúdo
         setTimeout(() => {
@@ -82,15 +104,15 @@ class DashboardFullscreen {
         if (chartType === 'temperature') {
             titleElement.textContent = 'Temperatura (°C) - Análise Detalhada';
             iconElement.innerHTML = '<i class="fas fa-thermometer-half"></i>';
-            iconElement.className = 'chart-icon temp';
+            iconElement.className = 'temp';
         } else if (chartType === 'humidity') {
             titleElement.textContent = 'Umidade Relativa (%) - Análise Detalhada';
             iconElement.innerHTML = '<i class="fas fa-tint"></i>';
-            iconElement.className = 'chart-icon humidity';
+            iconElement.className = 'humidity';
         } else if (chartType === 'violations') {
             titleElement.textContent = 'Últimas Violações - Análise Detalhada';
             iconElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-            iconElement.className = 'chart-icon violations';
+            iconElement.className = 'violations';
         }
     }
 
@@ -534,11 +556,15 @@ class DashboardFullscreen {
         }
 
         // Esconder modal
-        this.modal.classList.remove('active');
+        if (this.modal) {
+            this.modal.classList.remove('show');
+        }
         document.body.classList.remove('modal-active');
         document.body.style.overflow = '';
 
         this.currentChartType = null;
+
+        console.log('✅ Modal fechado');
     }
 
     // Método para atualizar gráfico fullscreen quando dados mudarem
