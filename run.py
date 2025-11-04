@@ -1,6 +1,3 @@
-# FastAPI Server Runner
-# Run this file to start the server
-
 if __name__ == "__main__":
     import uvicorn
     from app.config import settings
@@ -22,6 +19,6 @@ if __name__ == "__main__":
         "main:app",
         host=settings.host,
         port=settings.port,
-        reload=settings.debug,  # Auto-reload em modo debug
+        reload=settings.debug,
         log_level="info"
     )

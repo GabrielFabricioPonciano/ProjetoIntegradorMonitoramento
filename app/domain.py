@@ -1,26 +1,11 @@
-"""
-Business logic for violations detection
-Migrated from Django domain.py
-"""
 from typing import Optional
 
-# Limites mais realistas baseados nos dados reais
-TEMP_LOW = 17.0   # Temperatura mínima
-TEMP_HIGH = 19.5  # Temperatura máxima
-RH_LIMIT = 62.0   # Limite de umidade relativa (%)
+TEMP_LOW = 17.0
+TEMP_HIGH = 19.5
+RH_LIMIT = 62.0
 
 
 def is_violation(temp: Optional[float], rh: Optional[float]) -> bool:
-    """
-    Check if measurement is a violation
-    
-    Args:
-        temp: Temperature in Celsius
-        rh: Relative humidity as fraction (0-1)
-    
-    Returns:
-        bool: True if violation detected
-    """
     if temp is not None and (temp < TEMP_LOW or temp > TEMP_HIGH):
         return True
     if rh is not None and rh >= RH_LIMIT / 100.0:
@@ -29,16 +14,6 @@ def is_violation(temp: Optional[float], rh: Optional[float]) -> bool:
 
 
 def violation_reason(temp: Optional[float], rh: Optional[float]) -> str:
-    """
-    Generate violation reason message
-    
-    Args:
-        temp: Temperature in Celsius
-        rh: Relative humidity as fraction (0-1)
-    
-    Returns:
-        str: Violation reason message
-    """
     reasons = []
     
     if temp is not None and (temp < TEMP_LOW or temp > TEMP_HIGH):

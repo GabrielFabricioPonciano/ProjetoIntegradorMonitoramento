@@ -1,15 +1,8 @@
-"""
-SQLAlchemy models for FastAPI application
-Migrated from Django ORM models
-"""
 from sqlalchemy import Column, Integer, Float, DateTime, Index
 from .database import Base
 
 
 class Measurement(Base):
-    """
-    Measurement model - stores temperature and humidity readings
-    """
     __tablename__ = "monitoring_measurement"
     
     id = Column(Integer, primary_key=True, index=True)
